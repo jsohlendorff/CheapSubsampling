@@ -1,0 +1,19 @@
+Package: CheapSubsampling
+Title: Provides an easy-to-use implementation of the cheap subsampling confidence interval 
+Version: 1.0.0
+Authors@R: 
+    person("Johan Sebastian", "Ohlendorff", , "johan.ohlendorff@sund.ku.dk", role = c("aut", "cre"))
+Description: Implementation of the cheap subsampling confidence interval (Ohlendorff and Gerds, 2024). The method is a computationally efficient alternative to the bootstrap. The package provides a simple interface to the method, and is designed to be easy to use for non-experts.
+License: GPL (>= 2)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.1
+Imports:
+  parallel,
+  utils
+Suggests: 
+  MASS,
+  testthat (>= 3.0.0),
+  riskRegression,
+  survival
+Config/testthat/edition: 3
