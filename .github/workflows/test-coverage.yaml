@@ -33,7 +33,7 @@ jobs:
           cov <- covr::package_coverage(
             quiet = FALSE,
             clean = FALSE,
-            function_exclusions = c("shiny_cheap_bootstrap", "shiny_cheap_bootstrap_plot")
+            function_exclusions = c("shiny_cheap_bootstrap", "shiny_cheap_bootstrap_plot"),
             install_path = file.path(normalizePath(Sys.getenv("RUNNER_TEMP"), winslash = "/"), "package")
           )
           covr::to_cobertura(cov)
