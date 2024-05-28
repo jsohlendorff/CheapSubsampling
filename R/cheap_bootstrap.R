@@ -158,7 +158,7 @@ cheap_bootstrap <- function(fun,
     parallel::clusterExport(cl, c("fun", "b", "size", "alpha", "data", "type"), envir = environment())
     tryCatch({
       boot_est <- do.call("rbind",parallel::parLapply(cl, seq_len(b), function(i) {
-        fun(data[sample(1:n_val, size, replace = (type == "non_parametric")), ])
+        fun(data[sample(1:n_val, size, replace = (type == "non_parametric")), , drop = FALSE])
       }))
     parallel::stopCluster(cl)
     }, error = function(e) {
@@ -172,7 +172,7 @@ cheap_bootstrap <- function(fun,
     tryCatch({
       boot_est <- do.call("rbind",lapply(seq_len(b), function(i) {
         if (progress_bar) utils::setTxtProgressBar(pb, i)
-        fun(data[sample(1:n_val, size, replace = (type == "non_parametric")), ])
+        fun(data[sample(1:n_val, size, replace = (type == "non_parametric")), , drop = FALSE])
       }))
     }, error = function(e) {
       stop("Bootstrap computation failed with error: ", conditionMessage(e))
