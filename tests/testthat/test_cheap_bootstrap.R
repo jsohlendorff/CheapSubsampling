@@ -22,7 +22,7 @@ test_that("cheap_subsampling_function", {
     ),
     dim = 3:4,
     dimnames = list(
-      c("estimate", "lower_b", "upper_b"),
+      c("estimate", "cheap_lower", "cheap_upper"),
       c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     )
   )
@@ -51,7 +51,7 @@ test_that("cheap_subsampling_model", {
     ),
     dim = 3:4,
     dimnames = list(
-      c("estimate", "lower_b", "upper_b"),
+      c("estimate", "cheap_lower", "cheap_upper"),
       c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     )
   )
@@ -78,9 +78,9 @@ test_that("cheap_subsampling_model_parallel", {
   x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
   set.seed(6)
   cs <- cheap_bootstrap(x,
-                          b = 10,
-                          parallelize = TRUE,
-                          cores = 2)
+                        b = 10,
+                        parallelize = TRUE,
+                        cores = 2)
   expect_output(print(cs))
 })
 
@@ -107,7 +107,7 @@ test_that("cheap_bootstrap_function", {
     ),
     dim = 3:4,
     dimnames = list(
-      c("estimate", "lower_b", "upper_b"),
+      c("estimate", "cheap_lower", "cheap_upper"),
       c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     )
   )

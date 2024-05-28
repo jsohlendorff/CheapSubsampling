@@ -5,9 +5,9 @@
 \title{Cheap subsampling}
 \usage{
 cheap_bootstrap(
-  x,
+  fun,
   b = 20,
-  m_val = NULL,
+  size = NULL,
   alpha = 0.05,
   parallelize = FALSE,
   cores = parallel::detectCores(),
@@ -17,13 +17,13 @@ cheap_bootstrap(
 )
 }
 \arguments{
-\item{x}{A function that returns a vector of coefficients
-or a model object which saves the call. In the second case, a
-coef needs to be defined for 'class(x)'.}
+\item{fun}{A function that returns a vector of coefficients or a
+model object which saves the call. In the second case, a coef
+needs to be defined for 'class(fun)'.}
 
 \item{b}{Number of bootstrap samples.}
 
-\item{m_val}{Subsample size. Defaults to 0.632 * nrow(data).}
+\item{size}{Subsample size. Defaults to 0.632 * nrow(data).}
 
 \item{alpha}{Significance level. Defaults to 0.05.}
 
@@ -59,20 +59,20 @@ the cheap subsampling method.
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-cs <- cheap_bootstrap(x, b = 1000, data = anorexia)
+fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+cs <- cheap_bootstrap(fun=fun, b = 1000, data = anorexia)
 cs
 
 ## example with a model object
 set.seed(123)
 x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
-cs2 <- cheap_bootstrap(x, b = 1000)
+cs2 <- cheap_bootstrap(fun=x, b = 1000)
 cs2
 
 ## example with a function call and parallel computation
 set.seed(123)
 x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-cs3 <- cheap_bootstrap(x, b = 1000, data = anorexia, parallelize = TRUE)
+cs3 <- cheap_bootstrap(fun=x, b = 1000, data = anorexia, parallelize = TRUE)
 cs3
 
 ## example with custom function returning coefficients 
@@ -113,6 +113,7 @@ ate_fit_fun <- function(d) {
 }
 set.seed(102)
 cs4 <- cheap_bootstrap(ate_fit_fun, b = 100, data = dtS)
+cs4
 
 ## example from riskRegression with no existing coef function
 set.seed(18)
