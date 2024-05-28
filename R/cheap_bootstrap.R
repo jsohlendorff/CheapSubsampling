@@ -1,4 +1,3 @@
-
 ## retrieve cheap subsampling confidence interval
 get_cheap_subsampling_confidence_interval <- function(est, boot_est, size, n_val, alpha) {
   b_val <- length(boot_est)
@@ -300,11 +299,6 @@ print.cheap_bootstrap <- function(x, ...) {
 plot.cheap_bootstrap <- function(x, ...) {
   b <- estimate <- cheap_lower <- cheap_upper <- NULL 
   est <- x$res$estimate
-  if (x$type == "non_parametric") {
-    size <- 1/2 * x$n ## cheap_bootstrap formula defaults to m = n/2 for non-parametric bootstrap
-  } else {
-    size <- x$size
-  }
   res_b <- list()
   for (b_cur in seq_len(x$b)){
     ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
