@@ -18,5 +18,6 @@ NULL
 # covr::package_coverage() ## to check coverage
 # zero_coverage(package_coverage()) ## to check which lines are not covered
 # usethis::use_coverage()
+# codecov(token = "add_string_here") ## to add codecov
 # lintr?
 # note: make shiny app
