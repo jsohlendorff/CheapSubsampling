@@ -5,38 +5,41 @@
 \title{Cheap subsampling}
 \usage{
 cheap_subsampling(
-  x,
+  fun,
   b,
-  m_val = NULL,
+  size = NULL,
   alpha = 0.05,
+  keep_boot_estimates = FALSE,
   parallelize = FALSE,
   cores = parallel::detectCores(),
   data = NULL
 )
 }
 \arguments{
-\item{x}{A function that returns a vector of coefficients
-or a model object which saves the call. In the second case, a
-coef needs to be defined for 'class(x)'.}
-
 \item{b}{Number of bootstrap samples.}
 
-\item{m_val}{Subsample size. Defaults to 0.632 * nrow(data).}
+\item{size}{Subsample size. Defaults to 0.632 * nrow(data).}
 
 \item{alpha}{Significance level. Defaults to 0.05.}
 
-\item{parallelize}{Logical.
-Should the bootstrap samples be computed in parallel?
-Defaults to FALSE.}
+\item{keep_boot_estimates}{Logical. If \code{TRUE} add the subsampling bootstrap estimates to the output list.}
+
+\item{parallelize}{Logical.  Should the bootstrap samples be
+computed in parallel?  Defaults to FALSE.}
 
 \item{cores}{Number of cores to use for parallel computation.
 Defaults to detectCores().}
 
-\item{data}{Data set to be used for the computation, if applicable.}
+\item{data}{Data set to be used for the computation, if
+applicable.}
+
+\item{x}{A function that returns a vector of coefficients or a
+model object which saves the call. In the second case, a coef
+needs to be defined for 'class(x)'.}
 }
 \value{
-An object of class "cheap_subsampling" containing
-the point estimates and confidence intervals.
+An object of class "cheap_subsampling" containing the
+point estimates and confidence intervals.
 }
 \description{
 Method implementing the cheap subsampling method for confidence intervals
@@ -52,8 +55,8 @@ the cheap subsampling method.
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia))
-cs <- cheap_subsampling(x, b = 1000, data = anorexia)
+fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+cs <- cheap_subsampling(x=fun, b = 1000, data = anorexia)
 cs
 
 ## example with a model object
