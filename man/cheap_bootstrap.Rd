@@ -9,6 +9,7 @@ cheap_bootstrap(
   b = 20,
   size = NULL,
   alpha = 0.05,
+  keep_boot_estimates = TRUE,
   parallelize = FALSE,
   cores = parallel::detectCores(),
   data = NULL,
@@ -26,6 +27,9 @@ needs to be defined for 'class(fun)'.}
 \item{size}{Subsample size. Defaults to 0.632 * nrow(data).}
 
 \item{alpha}{Significance level. Defaults to 0.05.}
+
+\item{keep_boot_estimates}{Logical.
+Should the bootstrap estimates be kept? Defaults to FALSE.}
 
 \item{parallelize}{Logical.
 Should the bootstrap samples be computed in parallel?
@@ -60,6 +64,7 @@ utils::data(anorexia, package = "MASS")
 set.seed(123)
 fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
 cs <- cheap_bootstrap(fun=fun, b = 20, data = anorexia)
+cs
 summary(cs)
 
 ## example with a model object
@@ -114,7 +119,6 @@ ate_fit_fun <- function(d) {
 set.seed(102)
 cs4 <- cheap_bootstrap(ate_fit_fun, b = 5, data = dtS)
 summary(cs4)
-}
 
 ## example from riskRegression with no existing coef function
 set.seed(18)
@@ -137,4 +141,5 @@ coef.Score <- function(x) {
 set.seed(102)
 cs5 <- cheap_bootstrap(z, b = 20)
 summary(cs5)
+}
 }

@@ -1,4 +1,4 @@
-### get_cheap_subsampling_ci.R --- 
+### get_cheap_subsampling_confidence_interval.R --- 
 #----------------------------------------------------------------------
 ## Author: Thomas Alexander Gerds
 ## Created: May 28 2024 (08:38) 
@@ -14,11 +14,11 @@
 #----------------------------------------------------------------------
 ## 
 ### Code:
-get_cheap_subsampling_ci <- function(est, boot_est, size, n_val, alpha) {
+get_cheap_subsampling_confidence_interval <- function(est, boot_est, size, n_val, alpha) {
     b_val <- length(boot_est)
     s_val <- sqrt(mean((est - boot_est)^2))
     tq <- stats::qt(1 - alpha / 2, df = b_val)
-    list(
+    data.frame(
         estimate = est,
         cheap_lower = est - tq * sqrt((size) / (n_val - size)) * s_val,
         cheap_upper = est + tq * sqrt((size) / (n_val - size)) * s_val
@@ -29,4 +29,4 @@ get_cheap_subsampling_ci <- function(est, boot_est, size, n_val, alpha) {
 
 
 ######################################################################
-### get_cheap_subsampling_ci.R ends here
+### get_cheap_subsampling_confidence_interval.R ends here

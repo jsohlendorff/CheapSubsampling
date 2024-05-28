@@ -7,25 +7,28 @@ test_that("cheap_subsampling_function", {
   cs <- cheap_bootstrap(x, b = 10, data = anorexia)
   check <- structure(
     list(
-      c(`(Intercept)` = 49.7711090149846),
-      c(`(Intercept)` = 15.4837723109149),
-      c(`(Intercept)` = 84.0584457190543),
-      c(Prewt = -0.565538849639096),
-      c(Prewt = -0.964312324218352),
-      c(Prewt = -0.16676537505984),
-      c(TreatCont = -4.0970655280729),
-      c(TreatCont = -8.50522658403253),
-      c(TreatCont = 0.31109552788673),
-      c(TreatFT = 4.56306265291879),
-      c(TreatFT = -0.420345452050825),
-      c(TreatFT = 9.5464707578884)
+      estimate = c(
+        49.7711090149846,-0.565538849639096,
+        -4.0970655280729,
+        4.56306265291879
+      ),
+      cheap_lower = c(
+        15.4837723109149,
+        -0.964312324218352,-8.50522658403253,-0.420345452050825
+      ),
+      cheap_upper = c(
+        84.0584457190543,
+        -0.16676537505984,
+        0.31109552788673,
+        9.5464707578884
+      ),
+      parameter = c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     ),
-    dim = 3:4,
-    dimnames = list(
-      c("estimate", "cheap_lower", "cheap_upper"),
-      c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
-    )
+    row.names = c(NA, -4L),
+    class = "data.frame"
   )
+  expect_output(print(cs))
+  expect_output(summary(cs))
   expect_equal(cs$res, check)
 })
 
@@ -36,24 +39,25 @@ test_that("cheap_subsampling_model", {
   cs <- cheap_bootstrap(x, b = 10)
   check <- structure(
     list(
-      c(`(Intercept)` = 49.7711090149846),
-      c(`(Intercept)` = 15.4837723109149),
-      c(`(Intercept)` = 84.0584457190543),
-      c(Prewt = -0.565538849639096),
-      c(Prewt = -0.964312324218352),
-      c(Prewt = -0.16676537505984),
-      c(TreatCont = -4.0970655280729),
-      c(TreatCont = -8.50522658403253),
-      c(TreatCont = 0.31109552788673),
-      c(TreatFT = 4.56306265291879),
-      c(TreatFT = -0.420345452050825),
-      c(TreatFT = 9.5464707578884)
+      estimate = c(
+        49.7711090149846,-0.565538849639096,
+        -4.0970655280729,
+        4.56306265291879
+      ),
+      cheap_lower = c(
+        15.4837723109149,
+        -0.964312324218352,-8.50522658403253,-0.420345452050825
+      ),
+      cheap_upper = c(
+        84.0584457190543,
+        -0.16676537505984,
+        0.31109552788673,
+        9.5464707578884
+      ),
+      parameter = c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     ),
-    dim = 3:4,
-    dimnames = list(
-      c("estimate", "cheap_lower", "cheap_upper"),
-      c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
-    )
+    row.names = c(NA, -4L),
+    class = "data.frame"
   )
   expect_equal(cs$res, check)
 })
@@ -92,24 +96,25 @@ test_that("cheap_bootstrap_function", {
   cs <- cheap_bootstrap(x, b = 10, data = anorexia, type = "non_parametric")
   check <- structure(
     list(
-      c(`(Intercept)` = 49.7711090149846),
-      c(`(Intercept)` = 9.04028074218562),
-      c(`(Intercept)` = 90.5019372877836),
-      c(Prewt = -0.565538849639096),
-      c(Prewt = -1.06914141201443),
-      c(Prewt = -0.0619362872637669),
-      c(TreatCont = -4.0970655280729),
-      c(TreatCont = -7.86760563700546),
-      c(TreatCont = -0.326525419140337),
-      c(TreatFT = 4.56306265291879),
-      c(TreatFT = -1.12128954094085),
-      c(TreatFT = 10.2474148467784)
+      estimate = c(
+        49.7711090149846,
+        -0.565538849639096,-4.0970655280729,
+        4.56306265291879
+      ),
+      cheap_lower = c(
+        9.04028074218562,-1.06914141201443,
+        -7.86760563700546,
+        -1.12128954094085
+      ),
+      cheap_upper = c(
+        90.5019372877836,-0.0619362872637669,
+        -0.326525419140337,
+        10.2474148467784
+      ),
+      parameter = c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
     ),
-    dim = 3:4,
-    dimnames = list(
-      c("estimate", "cheap_lower", "cheap_upper"),
-      c("(Intercept)", "Prewt", "TreatCont", "TreatFT")
-    )
+    row.names = c(NA, -4L),
+    class = "data.frame"
   )
   expect_equal(cs$res, check)
   expect_output(print(cs))
@@ -348,7 +353,7 @@ test_that("error when bootstrap gives error", {
     }
     res
   }
-  set.seed(102)
+  set.seed(105)
   expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dtS))
 })
 
@@ -401,7 +406,7 @@ test_that("error when bootstrap gives error (parallel)", {
     }
     res
   }
-  set.seed(102)
+  set.seed(105)
   expect_error(cheap_bootstrap(
     ate_fit_fun,
     b = 10,
@@ -410,3 +415,30 @@ test_that("error when bootstrap gives error (parallel)", {
     cores = 2
   ))
 })
+
+test_that("more than one argument for parallelize", {
+  utils::data(anorexia, package = "MASS")
+  x <- function(d)
+    coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  expect_error(cheap_bootstrap(x, parallelize = c(FALSE, TRUE), data = anorexia))
+})
+
+test_that("calling fun fails", {
+  utils::data(anorexia, package = "MASS")
+  x <- function(d)
+    stop("oh no")
+  expect_error(cheap_bootstrap(x, data = anorexia))
+})
+
+test_that("fail in get_cheap_subsampling_confidence_interval", {
+  utils::data(anorexia, package = "MASS")
+  x <- function(d) {
+    r <- c(a=1, b=2)
+    if (runif(1) < 0.5) {
+      r$c <- 3
+    }
+  }
+  set.seed(8)
+  expect_error(cheap_bootstrap(x, data = anorexia))
+})
+

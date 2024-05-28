@@ -4,12 +4,12 @@
 \alias{shiny_cheap_bootstrap_plot}
 \title{Shiny app for cheap subsampling}
 \usage{
-shiny_cheap_bootstrap_plot(x, data = NULL)
+shiny_cheap_bootstrap_plot(fun, data = NULL)
 }
 \arguments{
-\item{x}{A function that returns a vector of coefficients
+\item{fun}{A function that returns a vector of coefficients
 or a model object which saves the call. In the second case, a
-coef needs to be defined for 'class(x)'.}
+coef needs to be defined for 'class(fun)'.}
 
 \item{data}{Data set to be used for the computation, if applicable.}
 }
@@ -21,8 +21,8 @@ Shiny app for cheap subsampling plot
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-shiny_cheap_bootstrap_plot(x, data = anorexia)
+fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+shiny_cheap_bootstrap_plot(fun, data = anorexia)
 }
 
 }

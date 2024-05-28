@@ -17,9 +17,9 @@ get_shiny_panel <- function(n_val){
 ##' The user can vary the number of bootstrap samples and the subsample size.
 ##' 
 ##' @title Shiny app for cheap subsampling
-##' @param x A function that returns a vector of coefficients 
+##' @param fun A function that returns a vector of coefficients 
 ##' or a model object which saves the call. In the second case, a
-##' coef needs to be defined for 'class(x)'.
+##' coef needs to be defined for 'class(fun)'.
 ##' @param data Data set to be used for the computation, if applicable. 
 ##' @export
 ##' @examples
@@ -27,16 +27,16 @@ get_shiny_panel <- function(n_val){
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
-##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-##' shiny_cheap_bootstrap(x, data = anorexia)
+##' fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' shiny_cheap_bootstrap(fun, data = anorexia)
 ##' }
-shiny_cheap_bootstrap <- function(x, data = NULL) {
+shiny_cheap_bootstrap <- function(fun, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("shiny package is required for this function")
   }
   
-  data_and_call <- get_data_and_call(x, data = data)
-  x <- data_and_call$x
+  data_and_call <- get_data_and_call(fun, data = data)
+  fun <- data_and_call$fun
   data <- data_and_call$data
   n_val <- data_and_call$n_val
   
@@ -54,7 +54,7 @@ shiny_cheap_bootstrap <- function(x, data = NULL) {
     shiny::observeEvent(input$run, {
       output$table <- shiny::renderTable({
         cheap_bootstrap(
-          x,
+          fun,
           b = input$b,
           size = input$size,
           alpha = input$alpha,
@@ -74,9 +74,9 @@ shiny_cheap_bootstrap <- function(x, data = NULL) {
 ##' Shiny app for cheap subsampling plot
 ##'
 ##' @title Shiny app for cheap subsampling
-##' @param x A function that returns a vector of coefficients 
+##' @param fun A function that returns a vector of coefficients 
 ##' or a model object which saves the call. In the second case, a
-##' coef needs to be defined for 'class(x)'.
+##' coef needs to be defined for 'class(fun)'.
 ##' @param data Data set to be used for the computation, if applicable. 
 ##' @export
 ##' @examples
@@ -84,17 +84,17 @@ shiny_cheap_bootstrap <- function(x, data = NULL) {
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
-##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-##' shiny_cheap_bootstrap_plot(x, data = anorexia)
+##' fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' shiny_cheap_bootstrap_plot(fun, data = anorexia)
 ##' }
 ##' 
-shiny_cheap_bootstrap_plot <- function(x, data = NULL) {
+shiny_cheap_bootstrap_plot <- function(fun, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("shiny package is required for this function")
   }
   
-  data_and_call <- get_data_and_call(x, data = data)
-  x <- data_and_call$x
+  data_and_call <- get_data_and_call(fun, data = data)
+  fun <- data_and_call$fun
   data <- data_and_call$data
   n_val <- data_and_call$n_val
   
@@ -107,7 +107,7 @@ shiny_cheap_bootstrap_plot <- function(x, data = NULL) {
     shiny::observeEvent(input$run, {
       output$plot <- shiny::renderPlot(
         plot.cheap_bootstrap(cheap_bootstrap(
-          x,
+          fun,
           b = input$b,
           size = input$size,
           alpha = input$alpha,

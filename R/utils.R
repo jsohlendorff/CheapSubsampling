@@ -24,7 +24,7 @@ get_data_and_call <- function(fun, data = NULL){
   }
   
   if (!inherits(data, "data.frame")) {
-    stop("data needs to be a data frame")
+    stop("Data needs to be a data frame")
   }
   n_val <- nrow(data)
   list(data = data, n_val = n_val, fun = fun)
