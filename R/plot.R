@@ -11,11 +11,12 @@
 ##' ## example with a function call
 ##' set.seed(123)
 ##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-##' cs <- cheap_bootstrap(x, b = 1000, data = anorexia)
+##' cs <- cheap_bootstrap(x, b = 10, data = anorexia)
 ##' plot(cs)
 ##' }
 ##' 
 plot.cheap_bootstrap <- function(x, ...) {
+  b <- estimate <- lower_b <- upper_b <- NULL 
   est <- as.numeric(x$res[1, ])
   if (x$type == "non_parametric") size <- 1/2 * x$n ## cheap_bootstrap formula defaults to m = n/2 for non-parametric bootstrap
   else size <- x$size

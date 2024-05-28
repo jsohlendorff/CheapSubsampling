@@ -1,4 +1,6 @@
 get_data_and_call <- function(fun, data = NULL){
+  coef <- NULL
+  
   if (!inherits(fun, "function")) {
     ## tryCatch to retrieve fun$call
     message("fun is not a function, trying to retrieve call object from fun")

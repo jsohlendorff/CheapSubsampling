@@ -23,11 +23,13 @@ get_shiny_panel <- function(n_val){
 ##' @param data Data set to be used for the computation, if applicable. 
 ##' @export
 ##' @examples
+##' \dontrun{
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
 ##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
 ##' shiny_cheap_bootstrap(x, data = anorexia)
+##' }
 shiny_cheap_bootstrap <- function(x, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("shiny package is required for this function")
@@ -78,11 +80,13 @@ shiny_cheap_bootstrap <- function(x, data = NULL) {
 ##' @param data Data set to be used for the computation, if applicable. 
 ##' @export
 ##' @examples
+##' \dontrun{
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
 ##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
 ##' shiny_cheap_bootstrap_plot(x, data = anorexia)
+##' }
 ##' 
 shiny_cheap_bootstrap_plot <- function(x, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {

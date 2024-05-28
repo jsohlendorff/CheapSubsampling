@@ -21,9 +21,11 @@ This function creates a shiny app for the cheap subsampling method.
 The user can vary the number of bootstrap samples and the subsample size.
 }
 \examples{
+\dontrun{
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
 x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
 shiny_cheap_bootstrap(x, data = anorexia)
+}
 }
