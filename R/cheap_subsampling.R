@@ -6,7 +6,9 @@
 ##' the cheap subsampling method.
 ##'
 ##' @title Cheap subsampling
-##' @param fun
+##' @param fun A function that returns a vector of coefficients or a
+##'     model object which saves the call. In the second case, a coef
+##'     needs to be defined for 'class(x)'.
 ##' @param b Number of bootstrap samples.
 ##' @param size Subsample size. Defaults to 0.632 * nrow(data).
 ##' @param alpha Significance level. Defaults to 0.05.
@@ -17,9 +19,6 @@
 ##'     Defaults to detectCores().
 ##' @param data Data set to be used for the computation, if
 ##'     applicable.
-##' @param x A function that returns a vector of coefficients or a
-##'     model object which saves the call. In the second case, a coef
-##'     needs to be defined for 'class(x)'.
 ##' @return An object of class "cheap_subsampling" containing the
 ##'     point estimates and confidence intervals.
 ##' @export
