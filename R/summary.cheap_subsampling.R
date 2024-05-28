@@ -3,9 +3,9 @@
 ## Author: Thomas Alexander Gerds
 ## Created: May 28 2024 (08:39) 
 ## Version: 
-## Last-Updated: May 28 2024 (13:20) 
+## Last-Updated: May 28 2024 (13:23) 
 ##           By: Thomas Alexander Gerds
-##     Update #: 4
+##     Update #: 5
 #----------------------------------------------------------------------
 ## 
 ### Commentary: 
@@ -22,11 +22,10 @@
 ##' @return Summary table with the point estimates and confidence intervals.
 ##' @export
 summary.cheap_subsampling <- function(x,print = TRUE, ...) {
-    cat(paste0("Cheap subsampling results for subsample size m = ", x$m, " and ", x$b, " bootstrap samples\n"))
-    if (print[[1]] == TRUE)
-        y <- summary(x$res, ...)
-    else
-        y <- capture.output(summary(x$res, ...))
+    y <- x$res
+    if (print[[1]] == TRUE){
+        print(y,...)
+    }
     invisible(y)
 }
 
