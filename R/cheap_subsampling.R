@@ -1,14 +1,3 @@
-get_cheap_subsampling_ci <- function(est, boot_est, m_val, n_val, alpha) {
-  b_val <- length(boot_est)
-  s_val <- sqrt(mean((est - boot_est)^2))
-  tq <- stats::qt(1 - alpha / 2, df = b_val)
-  list(
-    estimate = est,
-    lower_b = est - tq * sqrt((m_val) / (n_val - m_val)) * s_val,
-    upper_b = est + tq * sqrt((m_val) / (n_val - m_val)) * s_val
-  )
-}
-
 ##' Method implementing the cheap subsampling method for confidence intervals
 ##' 
 ##' Given a model object or a function that returns a vector of coefficients 
@@ -21,7 +10,7 @@ get_cheap_subsampling_ci <- function(est, boot_est, m_val, n_val, alpha) {
 ##' or a model object which saves the call. In the second case, a
 ##' coef needs to be defined for 'class(x)'.
 ##' @param b Number of bootstrap samples.
-##' @param m_val Subsample size. Defaults to 0.632 * nrow(data).
+##' @param size Subsample size. Defaults to 0.632 * nrow(data).
 ##' @param alpha Significance level. Defaults to 0.05.
 ##' @param parallelize Logical. 
 ##' Should the bootstrap samples be computed in parallel? 
@@ -37,7 +26,7 @@ get_cheap_subsampling_ci <- function(est, boot_est, m_val, n_val, alpha) {
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
-##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia))
 ##' cs <- cheap_subsampling(x, b = 1000, data = anorexia)
 ##' cs
 ##' 
@@ -113,7 +102,7 @@ get_cheap_subsampling_ci <- function(est, boot_est, m_val, n_val, alpha) {
 ##' set.seed(102)
 ##' cs5 <- cheap_subsampling(z, b = 100)
 ##' }
-cheap_subsampling <- function(x, b, m_val = NULL, alpha = 0.05, parallelize = FALSE, cores = parallel::detectCores(), data = NULL) {
+cheap_subsampling <- function(x, b, size = NULL, alpha = 0.05, parallelize = FALSE, cores = parallel::detectCores(), data = NULL) {
   coef <- NULL
   if (!inherits(x, "function")) {
     ## tryCatch to retrieve x$call
@@ -141,8 +130,8 @@ cheap_subsampling <- function(x, b, m_val = NULL, alpha = 0.05, parallelize = FA
     stop("data needs to be a data frame")
   }
   n_val <- nrow(data)
-  if (is.null(m_val)) {
-    m_val <- round(0.632 * n_val)
+  if (is.null(size)) {
+    size <- round(0.632 * n_val)
   }
   est <- tryCatch({
     x(data)
@@ -159,10 +148,10 @@ cheap_subsampling <- function(x, b, m_val = NULL, alpha = 0.05, parallelize = FA
   if (parallelize) {
     requireNamespace("parallel")
     cl <- parallel::makeCluster(cores)
-    parallel::clusterExport(cl, c("x", "b", "m_val", "alpha", "data"), envir = environment())
+    parallel::clusterExport(cl, c("x", "b", "size", "alpha", "data"), envir = environment())
     tryCatch({
       boot_est <- parallel::parSapply(cl, seq_len(b), function(i) {
-        x(data[sample(1:n_val, m_val, replace = FALSE), ])
+        x(data[sample(1:n_val, size, replace = FALSE), ])
       })
     }, error = function(e) {
       stop("bootstrap (parallel) computation failed with error: ", conditionMessage(e))
@@ -173,7 +162,7 @@ cheap_subsampling <- function(x, b, m_val = NULL, alpha = 0.05, parallelize = FA
     tryCatch({
       boot_est <- sapply(seq_len(b), function(i) {
         utils::setTxtProgressBar(pb, i)
-        x(data[sample(1:n_val, m_val, replace = FALSE), ])
+        x(data[sample(1:n_val, size, replace = FALSE), ])
       })
     }, error = function(e) {
       stop("bootstrap computation failed with error: ", conditionMessage(e))
@@ -183,26 +172,15 @@ cheap_subsampling <- function(x, b, m_val = NULL, alpha = 0.05, parallelize = FA
   ## apply get_cheap_subsampling_ci for each row of boot_est, est
   tryCatch({
     res <- sapply(seq_len(length(est)), function(i) {
-      get_cheap_subsampling_ci(est[i], boot_est[i, ], m_val, n_val, alpha)
+      get_cheap_subsampling_ci(est[i], boot_est[i, ], size, n_val, alpha)
     })
   }, error = function(e) {
     stop("computation of confidence intervals failed with error: ", conditionMessage(e), ". Does your function return a vector of coefficients?")
   })
   colnames(res) <- names(est)
-  res <- list(res = res, boot_estimates = boot_est, b = b, m = m_val)
+  res <- list(res = res, boot_estimates = boot_est, b = b, m = size)
   class(res) <- "cheap_subsampling"
   res
 }
 
-##' Print method for cheap_subsampling objects
-##' 
-##' @title Print method for cheap_subsampling objects
-##' @param x An object of class "cheap_subsampling"
-##' @param ... Not applicable.
-##' Prints the point estimates and confidence intervals.
-##' @export
-print.cheap_subsampling <- function(x, ...) {
-  cat(paste0("Cheap subsampling results for subsample size m = ", x$m, " and ", x$b, " bootstrap samples\n"))
-  print(x$res, ...)
-  invisible(x)
-}
+

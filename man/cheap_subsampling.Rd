@@ -16,7 +16,8 @@ cheap_subsampling(
 }
 \arguments{
 \item{x}{A function that returns a vector of coefficients
-or a model object which saves the call. In the second case, a coef needs to be defined for 'class(x)'.}
+or a model object which saves the call. In the second case, a
+coef needs to be defined for 'class(x)'.}
 
 \item{b}{Number of bootstrap samples.}
 
@@ -24,28 +25,34 @@ or a model object which saves the call. In the second case, a coef needs to be d
 
 \item{alpha}{Significance level. Defaults to 0.05.}
 
-\item{parallelize}{Logical. Should the bootstrap samples be computed in parallel? Defaults to FALSE.}
+\item{parallelize}{Logical.
+Should the bootstrap samples be computed in parallel?
+Defaults to FALSE.}
 
-\item{cores}{Number of cores to use for parallel computation. Defaults to detectCores().}
+\item{cores}{Number of cores to use for parallel computation.
+Defaults to detectCores().}
 
 \item{data}{Data set to be used for the computation, if applicable.}
 }
 \value{
-An object of class "cheap_subsampling" containing the point estimates and confidence intervals.
+An object of class "cheap_subsampling" containing
+the point estimates and confidence intervals.
 }
 \description{
 Method implementing the cheap subsampling method for confidence intervals
 }
 \details{
-Given a model object or a function that returns a vector of coefficients and a data set,
-this function computes confidence intervals using the cheap subsampling method.
+Given a model object or a function that returns a vector of coefficients
+and a data set,
+this function computes confidence intervals using
+the cheap subsampling method.
 }
 \examples{
 \dontrun{
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia))
 cs <- cheap_subsampling(x, b = 1000, data = anorexia)
 cs
 
@@ -86,7 +93,8 @@ ate_fit_fun <- function(d) {
                                                   treatment = "X1", 
                                                   times = 5:8, 
                                                   se = FALSE))))
-  res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
+  ## extract the point estimates for risk difference
+  res <- ate_fit$diffRisk$estimate
   ## name the point estimates
   names(res) <- paste0("ATE ",
                        ate_fit$diffRisk$A,
@@ -107,7 +115,11 @@ testdat <- sampleData(1200,outcome="binary")
 ## score logistic regression models
 lr1 = glm(Y~X1+X2+X7+X9,data=learndat,family=binomial)
 lr2 = glm(Y~X3+X5,data=learndat,family=binomial)
-z<-Score(list("LR(X1+X2+X7+X9)"=lr1,"LR(X3+X5)"=lr2),formula=Y~1,data=testdat, metrics = "AUC")
+z<-Score(list("LR(X1+X2+X7+X9)"=lr1,
+         "LR(X3+X5)"=lr2),
+         formula=Y~1,
+         data=testdat,
+         metrics = "AUC")
 coef.Score <- function(x) {
   res <- x$AUC$score$AUC
   names(res) <- paste0("AUC (model = ", x$AUC$score$model, ")")
