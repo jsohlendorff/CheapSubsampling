@@ -16,3 +16,4 @@ NULL
 # zero_coverage(package_coverage()) ## to check which lines are not covered
 # usethis::use_coverage()
 # lintr?
+# note: make shiny app
