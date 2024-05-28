@@ -1,4 +1,3 @@
-
 ##' Method implementing the cheap subsampling method for confidence intervals
 ##' 
 ##' Given a model object or a function that returns a vector of coefficients 

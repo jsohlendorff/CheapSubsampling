@@ -4,7 +4,7 @@
 \alias{summary.cheap_subsampling}
 \title{Summary method for cheap_subsampling objects}
 \usage{
-\method{summary}{cheap_subsampling}(x, ...)
+\method{summary}{cheap_subsampling}(x, print = TRUE, ...)
 }
 \arguments{
 \item{x}{An object of class "cheap_subsampling"}
