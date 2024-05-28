@@ -1,4 +1,49 @@
 
+## retrieve cheap subsampling confidence interval
+get_cheap_subsampling_confidence_interval <- function(est, boot_est, size, n_val, alpha) {
+  b_val <- length(boot_est)
+  s_val <- sqrt(mean((est - boot_est)^2))
+  tq <- stats::qt(1 - alpha / 2, df = b_val)
+  data.frame(
+    estimate = est,
+    cheap_lower = est - tq * sqrt((size) / (n_val - size)) * s_val,
+    cheap_upper = est + tq * sqrt((size) / (n_val - size)) * s_val
+  )
+}
+
+## get data and retrieve function from call object in fun.
+get_data_and_call <- function(fun, data = NULL){
+  coef <- NULL
+  
+  if (!inherits(fun, "function")) {
+    ## tryCatch to retrieve fun$call
+    message("fun is not a function, trying to retrieve call object from fun")
+    call <- fun$call
+    if (is.null(call)) {
+      stop("fun does not appear to have a call")
+    }
+    # get data from call in parent environment
+    if (is.null(data)) {
+      tryCatch({
+        data <- eval(call$data, .GlobalEnv)
+      }, error = function(e) {
+        stop("data not found in environment or missing from call object")
+      })
+    }
+    ## make call object into string
+    fun <- function(d) {
+      call$data <- d
+      coef(eval(call))
+    }
+  }
+  
+  if (!inherits(data, "data.frame")) {
+    stop("Data needs to be a data frame")
+  }
+  n_val <- nrow(data)
+  list(data = data, n_val = n_val, fun = fun)
+}
+
 ##' Method implementing the cheap subsampling method for confidence intervals
 ##' 
 ##' Given a model object or a function that returns a vector of coefficients 

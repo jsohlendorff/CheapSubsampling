@@ -1,4 +1,3 @@
-
 get_shiny_panel <- function(n_val){
   shiny::sidebarPanel(
     shiny::sliderInput("b", "Number of bootstrap samples", min = 1, max = 1000, value = 20, step = 1),
