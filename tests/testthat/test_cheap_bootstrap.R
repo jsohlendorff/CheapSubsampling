@@ -275,7 +275,7 @@ test_that("error when bootstrap gives weird results", {
   ## fitter function which returns a named vector
   ate_fit_fun <- function(d) {
     ## main fitter function; ignore output
-    invisible(capture.output(ate_fit <- summary(
+    invisible(capture.output(suppressWarnings(ate_fit <- summary(
       ate(
         fit,
         data = d,
@@ -283,7 +283,7 @@ test_that("error when bootstrap gives weird results", {
         times = 5:8,
         se = FALSE
       )
-    )))
+    ))))
     res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
     ## name the point estimates
     names(res) <- paste0(
@@ -328,7 +328,7 @@ test_that("error when bootstrap gives error", {
   ## fitter function which returns a named vector
   ate_fit_fun <- function(d) {
     ## main fitter function; ignore output
-    invisible(capture.output(ate_fit <- summary(
+    invisible(capture.output(suppressWarnings(ate_fit <- summary(
       ate(
         fit,
         data = d,
@@ -336,7 +336,7 @@ test_that("error when bootstrap gives error", {
         times = 5:8,
         se = FALSE
       )
-    )))
+    ))))
     res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
     ## name the point estimates
     names(res) <- paste0(
@@ -433,9 +433,10 @@ test_that("calling fun fails", {
 test_that("fail in get_cheap_subsampling_confidence_interval", {
   utils::data(anorexia, package = "MASS")
   x <- function(d) {
-    r <- c(a=1, b=2)
     if (runif(1) < 0.5) {
-      r$c <- 3
+      c(a=1, b=2, b= 3)
+    } else {
+      list(a=1, b = 2)
     }
   }
   set.seed(8)
