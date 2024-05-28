@@ -55,25 +55,25 @@ this function computes confidence intervals using
 the cheap subsampling method.
 }
 \examples{
-\dontrun{
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
 fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
-cs <- cheap_bootstrap(fun=fun, b = 1000, data = anorexia)
-cs
+cs <- cheap_bootstrap(fun=fun, b = 20, data = anorexia)
+summary(cs)
 
 ## example with a model object
 set.seed(123)
 x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
-cs2 <- cheap_bootstrap(fun=x, b = 1000)
-cs2
+cs2 <- cheap_bootstrap(fun=x, b = 20)
+summary(cs2)
 
 ## example with a function call and parallel computation
+\dontrun{
 set.seed(123)
 x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-cs3 <- cheap_bootstrap(fun=x, b = 1000, data = anorexia, parallelize = TRUE)
-cs3
+cs3 <- cheap_bootstrap(fun=x, b = 20, data = anorexia, parallelize = TRUE, cores = 2)
+summary(cs3)
 
 ## example with custom function returning coefficients 
 ## example from ATE-package
@@ -112,8 +112,9 @@ ate_fit_fun <- function(d) {
   res
 }
 set.seed(102)
-cs4 <- cheap_bootstrap(ate_fit_fun, b = 100, data = dtS)
-cs4
+cs4 <- cheap_bootstrap(ate_fit_fun, b = 5, data = dtS)
+summary(cs4)
+}
 
 ## example from riskRegression with no existing coef function
 set.seed(18)
@@ -134,6 +135,6 @@ coef.Score <- function(x) {
   res
 }
 set.seed(102)
-cs5 <- cheap_bootstrap(z, b = 100)
-}
+cs5 <- cheap_bootstrap(z, b = 20)
+summary(cs5)
 }
