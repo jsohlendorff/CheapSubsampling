@@ -11,7 +11,7 @@ get_cheap_subsampling_confidence_interval <- function(est, boot_est, size, n_val
 }
 
 ## get data and retrieve function from call object in fun.
-get_data_and_call <- function(fun, data = NULL){
+get_data_and_call <- function(fun, data = NULL, parent_env){
   coef <- NULL
   
   if (!inherits(fun, "function")) {
@@ -24,15 +24,15 @@ get_data_and_call <- function(fun, data = NULL){
     # get data from call in parent environment
     if (is.null(data)) {
       tryCatch({
-        data <- eval(call$data, .GlobalEnv)
+        data <- eval(call$data, parent_env)
       }, error = function(e) {
         stop("data not found in environment or missing from call object")
       })
     }
     ## make call object into string
     fun <- function(d) {
-      call$data <- d
-      coef(eval(call))
+      call$data <- force(d)
+      do.call("coef",  list(eval(call, envir = parent_env)), envir = parent_env)
     }
   }
   
@@ -61,13 +61,17 @@ get_data_and_call <- function(fun, data = NULL){
 ##' Should the bootstrap estimates be kept? Defaults to FALSE.
 ##' @param parallelize Logical. 
 ##' Should the bootstrap samples be computed in parallel? 
-##' Defaults to FALSE.
+##' Defaults to FALSE. Ignored for adaptive method.
 ##' @param cores Number of cores to use for parallel computation, if parallelize = TRUE.
 ##' Defaults to detectCores().
 ##' @param data Data set to be used for the computation, if applicable. 
 ##' @param progress_bar Logical. Should a progress bar be displayed? Defaults to TRUE.
 ##' @param type Character. Type of bootstrap method. Can be either "subsampling" or "non_parametric". 
 ##' Defaults to "subsampling".
+##' @param adapt Logical. Should the number of bootstrap samples be adaptively chosen? Defaults to FALSE.
+##' @param precision Numeric. Desired precision of the confidence interval(s). Defaults to 0.1.
+##' @param max_b Integer. Maximum number of bootstrap samples to be taken. Defaults to 200.
+##' @param print_current_precision Logical. Should the current precision be printed? Defaults to FALSE.
 ##' @return An object of class "cheap_bootstrap" containing 
 ##' the point estimates and confidence intervals.
 ##' @export
@@ -86,10 +90,18 @@ get_data_and_call <- function(fun, data = NULL){
 ##' cs2 <- cheap_bootstrap(fun=x, b = 20)
 ##' summary(cs2)
 ##' 
+##' ## example with adaptive method
+##' set.seed(123)
+##' fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+##' cs <- cheap_bootstrap(fun=fun, data = anorexia, adapt = TRUE, precision = 0.1, max_b = 200)
+##' cs
+##' summary(cs)
+##' 
 ##' ## example with a function call and parallel computation
 ##' \dontrun{
 ##' set.seed(123)
-##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' ## note the function needs to load the packages needed for the computation if parallelized
+##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d)) 
 ##' cs3 <- cheap_bootstrap(fun=x, b = 20, data = anorexia, parallelize = TRUE, cores = 2)
 ##' summary(cs3)
 ##' 
@@ -108,10 +120,11 @@ get_data_and_call <- function(fun, data = NULL){
 ##' dtS$time <- round(dtS$time,1)
 ##' dtS$X1 <- factor(rbinom(n, prob = c(0.3,0.4) , size = 2), labels = paste0("T",0:2))
 ##' 
-##' ## estimate the Cox model
-##' fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
 ##' ## fitter function which returns a named vector 
 ##' ate_fit_fun <- function(d) {
+##'   ## estimate the Cox model
+##'   fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
+##'
 ##'   ## main fitter function; ignore output
 ##'   invisible(capture.output(ate_fit <- summary(ate(fit, 
 ##'                                                   data = d, 
@@ -164,10 +177,14 @@ cheap_bootstrap <- function(fun,
                             cores = parallel::detectCores(),
                             data = NULL,
                             progress_bar = TRUE,
-                            type = "subsampling") {
+                            type = "subsampling",
+                            adapt = FALSE,
+                            precision = 0.1,
+                            max_b = 200,
+                            print_current_precision = FALSE) {
   arg_names <- setdiff(names(as.list(environment())), c("fun", "data"))
   
-  data_and_call <- get_data_and_call(fun, data = data)
+  data_and_call <- get_data_and_call(fun, data = data, parent.frame())
   fun <- data_and_call$fun
   data <- data_and_call$data
   n_val <- data_and_call$n_val
@@ -177,6 +194,9 @@ cheap_bootstrap <- function(fun,
   }
   if (type == "non_parametric"){
     size <- n_val
+    size_cb <- 1/2 * n_val ## cheap_bootstrap formula defaults to m = n/2 for non-parametric bootstrap
+  } else {
+    size_cb <- size
   }
   est <- tryCatch({
     fun(data)
@@ -195,8 +215,52 @@ cheap_bootstrap <- function(fun,
       stop(paste(var_name, "must be of length 1"))
     }
   }
-      
-  if (parallelize) {
+  
+  if (adapt) {
+    b <- 1
+    
+    ## initialize empty data frame to store bootstrap replications
+    boot_est <- list()
+    res <- list()
+    width_prev <- Inf
+    while (b <= max_b) {
+      ## compute bootstrap estimates
+      tryCatch({
+        curr_boot <- fun(data[sample(1:n_val, size, replace = (type == "non_parametric")), , drop = FALSE])
+      }, error = function(e) {
+        stop("Bootstrap computation failed with error: ", conditionMessage(e), " for bootstrap iteration b = ", b)
+      })
+      ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
+      tryCatch({
+        boot_est <- rbind(as.data.frame(t(curr_boot)), boot_est)
+        res[[b]] <- do.call("rbind", lapply(seq_len(length(est)), function(i) {
+          get_cheap_subsampling_confidence_interval(est[i], boot_est[, i], size_cb, n_val, alpha)
+        }))
+      }, error = function(e) {
+        stop(
+          "Computation of confidence intervals failed with error: ",
+          conditionMessage(e),
+          ". Does your function return a vector of coefficients? ",
+          "NOTE: for bootstrap iteration b = ", b
+        )
+      })
+      ## calculate width for current iteration
+      width_curr <- res[[b]]$cheap_upper - res[[b]]$cheap_lower
+      ## print current precision
+      if (print_current_precision) print(abs(width_curr - width_prev))
+      if (all(abs(width_curr - width_prev) < precision)) {
+        break
+      } else {
+        b <- b + 1
+        width_prev <- width_curr
+      }
+    }
+    res <- res[[length(res)]]
+    if (b > max_b) {
+      b <- max_b
+    }
+  }
+  else if (parallelize) {
     requireNamespace("parallel")
     cl <- parallel::makeCluster(cores)
     parallel::clusterExport(cl, c("fun", "b", "size", "alpha", "data", "type"), envir = environment())
@@ -224,15 +288,17 @@ cheap_bootstrap <- function(fun,
   }
   if (progress_bar) cat("\n")
   
-  if (type == "non_parametric") size <- 1/2 * n_val ## cheap_bootstrap formula defaults to m = n/2 for non-parametric bootstrap
-  ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
-  tryCatch({
-    res <- do.call("rbind", lapply(seq_len(length(est)), function(i) {
-      get_cheap_subsampling_confidence_interval(est[i], boot_est[, i], size, n_val, alpha)
-    }))
-  }, error = function(e) {
-    stop("Computation of confidence intervals failed with error: ", conditionMessage(e), ". Does your function return a vector of coefficients?")
-  })
+  if (!adapt){
+    tryCatch({
+      ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
+      res <- do.call("rbind", lapply(seq_len(length(est)), function(i) {
+        get_cheap_subsampling_confidence_interval(est[i], boot_est[, i], size_cb, n_val, alpha)
+      }))
+    }, error = function(e) {
+      stop("Computation of confidence intervals failed with error: ", conditionMessage(e), ". Does your function return a vector of coefficients?")
+    })
+  }
+  
   res$parameter <- rownames(res)
   rownames(res) <- NULL
   res <- list(
@@ -281,6 +347,53 @@ print.cheap_bootstrap <- function(x, ...) {
   invisible(x)
 }
 
+##' Get all bootstrap confidence intervals
+##'
+##' @title Get all bootstrap confidence intervals
+##' @param x An object of class "cheap_bootstrap"
+##' @param ... Not applicable.
+##' Plots the point estimates and confidence intervals as a function of the number of bootstrap samples.
+##' @examples
+##' utils::data(anorexia, package = "MASS")
+##' ## example with a function call
+##' set.seed(123)
+##' x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' cs <- cheap_bootstrap(x, b = 10, data = anorexia)
+##' get_all_bootstrap_confidence_intervals(cs)
+##' @export get_all_bootstrap_confidence_intervals.cheap_bootstrap
+##' @export
+
+##' @export
+get_all_bootstrap_confidence_intervals <- function(x, ...) UseMethod("get_all_bootstrap_confidence_intervals")
+
+##' @rdname get_all_bootstrap_confidence_intervals
+##' @export get_all_bootstrap_confidence_intervals.cheap_bootstrap
+##' @export
+get_all_bootstrap_confidence_intervals.cheap_bootstrap <- function(x, ...) {
+  b <- estimate <- cheap_lower <- cheap_upper <- NULL 
+  est <- x$res$estimate
+  if (is.null(x$boot_estimates)) {
+    stop("No bootstrap estimates found in x")
+  }
+  res_b <- list()
+  for (b_cur in seq_len(x$b)){
+    ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
+
+    tryCatch({
+      res <- do.call("rbind", lapply(seq_len(length(est)), function(i) {
+        get_cheap_subsampling_confidence_interval(est[i], x$boot_est[seq_len(b_cur), i], x$size, x$n, x$alpha)
+      }))
+    }, error = function(e) {
+      stop("Computation of confidence intervals failed with error: ", conditionMessage(e), " for b = ", b_cur)
+    })
+    res$parameter <- x$res$parameter
+    rownames(res) <- NULL
+    res$b <- b_cur
+    res_b[[b_cur]] <- res
+  }
+  do.call(rbind, res_b)
+}
+
 ##' Plot method for cheap_bootstrap objects
 ##'
 ##' @title Plot method for cheap_bootstrap objects
@@ -298,28 +411,12 @@ print.cheap_bootstrap <- function(x, ...) {
 ##' 
 plot.cheap_bootstrap <- function(x, ...) {
   b <- estimate <- cheap_lower <- cheap_upper <- NULL 
-  est <- x$res$estimate
-  res_b <- list()
-  for (b_cur in seq_len(x$b)){
-    ## apply get_cheap_subsampling_confidence_interval for each row of boot_est, est
-    tryCatch({
-      res <- do.call("rbind", lapply(seq_len(length(est)), function(i) {
-        get_cheap_subsampling_confidence_interval(est[i], x$boot_est[seq_len(b_cur), i], x$size, x$n, x$alpha)
-      }))
-    }, error = function(e) {
-      stop("Computation of confidence intervals failed with error: ", conditionMessage(e), ". Does your function return a vector of coefficients?")
-    })
-    res$parameter <- x$res$parameter
-    rownames(res) <- NULL
-    res$b <- b_cur
-    res_b[[b_cur]] <- res
-  }
-  res_b <- do.call(rbind, res_b)
+  res_b <- get_all_bootstrap_confidence_intervals(x, ...)
   ggplot2::ggplot(data = res_b, ggplot2::aes(x = b, y = estimate)) +
     ggplot2::geom_line() +
     ggplot2::geom_ribbon(alpha = 0.2, ggplot2::aes(ymin = cheap_lower, ymax = cheap_upper)) +
     ggplot2::facet_wrap(~parameter, scales = "free_y") +
-    ggplot2::theme_minimal() +
-    ggplot2::labs(x = "Number of bootstrap samples") +
-    ggplot2::theme(legend.position = "bottom")
+    ggplot2::theme_bw() +
+    ggplot2::labs(x = "Number of bootstrap samples") + 
+    ggplot2::ylab(paste0("Cheap ",ifelse(x$type == "subsampling", "subsampling", "bootstrap"), " confidence intervals"))
 }

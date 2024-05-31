@@ -14,7 +14,11 @@ cheap_bootstrap(
   cores = parallel::detectCores(),
   data = NULL,
   progress_bar = TRUE,
-  type = "subsampling"
+  type = "subsampling",
+  adapt = FALSE,
+  precision = 0.1,
+  max_b = 200,
+  print_current_precision = FALSE
 )
 }
 \arguments{
@@ -33,7 +37,7 @@ Should the bootstrap estimates be kept? Defaults to FALSE.}
 
 \item{parallelize}{Logical.
 Should the bootstrap samples be computed in parallel?
-Defaults to FALSE.}
+Defaults to FALSE. Ignored for adaptive method.}
 
 \item{cores}{Number of cores to use for parallel computation, if parallelize = TRUE.
 Defaults to detectCores().}
@@ -44,6 +48,14 @@ Defaults to detectCores().}
 
 \item{type}{Character. Type of bootstrap method. Can be either "subsampling" or "non_parametric".
 Defaults to "subsampling".}
+
+\item{adapt}{Logical. Should the number of bootstrap samples be adaptively chosen? Defaults to FALSE.}
+
+\item{precision}{Numeric. Desired precision of the confidence interval(s). Defaults to 0.1.}
+
+\item{max_b}{Integer. Maximum number of bootstrap samples to be taken. Defaults to 200.}
+
+\item{print_current_precision}{Logical. Should the current precision be printed? Defaults to FALSE.}
 }
 \value{
 An object of class "cheap_bootstrap" containing
@@ -73,10 +85,18 @@ x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
 cs2 <- cheap_bootstrap(fun=x, b = 20)
 summary(cs2)
 
+## example with adaptive method
+set.seed(123)
+fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+cs <- cheap_bootstrap(fun=fun, data = anorexia, adapt = TRUE, precision = 0.1, max_b = 200)
+cs
+summary(cs)
+
 ## example with a function call and parallel computation
 \dontrun{
 set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+## note the function needs to load the packages needed for the computation if parallelized
+x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d)) 
 cs3 <- cheap_bootstrap(fun=x, b = 20, data = anorexia, parallelize = TRUE, cores = 2)
 summary(cs3)
 
@@ -95,10 +115,11 @@ dtS <- sampleData(n, outcome="survival")
 dtS$time <- round(dtS$time,1)
 dtS$X1 <- factor(rbinom(n, prob = c(0.3,0.4) , size = 2), labels = paste0("T",0:2))
 
-## estimate the Cox model
-fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
 ## fitter function which returns a named vector 
 ate_fit_fun <- function(d) {
+  ## estimate the Cox model
+  fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
+
   ## main fitter function; ignore output
   invisible(capture.output(ate_fit <- summary(ate(fit, 
                                                   data = d, 
