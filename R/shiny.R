@@ -65,12 +65,12 @@ shiny_cheap_bootstrap <- function(fun, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("shiny package is required for this function")
   }
-  
+
   data_and_call <- get_data_and_call(fun, data = data)
   fun <- data_and_call$fun
   data <- data_and_call$data
   n_val <- data_and_call$n_val
-  
+
   ui <- shiny::fluidPage(
     shiny::titlePanel("Cheap bootstrap"),
     shiny::sidebarLayout(
@@ -121,12 +121,12 @@ shiny_cheap_bootstrap_plot <- function(fun, data = NULL) {
   if (!requireNamespace("shiny", quietly = TRUE)) {
     stop("shiny package is required for this function")
   }
-  
+
   data_and_call <- get_data_and_call(fun, data = data)
   fun <- data_and_call$fun
   data <- data_and_call$data
   n_val <- data_and_call$n_val
-  
+
   ui <- shiny::fluidPage(get_shiny_panel(n_val), shiny::plotOutput("plot"))
   server <- function(input, output) {
     ## on event run, run the cheap_bootstrap function

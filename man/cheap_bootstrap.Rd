@@ -96,11 +96,11 @@ summary(cs)
 \dontrun{
 set.seed(123)
 ## note the function needs to load the packages needed for the computation if parallelized
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d)) 
+x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
 cs3 <- cheap_bootstrap(fun=x, b = 20, data = anorexia, parallelize = TRUE, cores = 2)
 summary(cs3)
 
-## example with custom function returning coefficients 
+## example with custom function returning coefficients
 ## example from ATE-package
 library(survival)
 library(riskRegression)
@@ -115,16 +115,16 @@ dtS <- sampleData(n, outcome="survival")
 dtS$time <- round(dtS$time,1)
 dtS$X1 <- factor(rbinom(n, prob = c(0.3,0.4) , size = 2), labels = paste0("T",0:2))
 
-## fitter function which returns a named vector 
+## fitter function which returns a named vector
 ate_fit_fun <- function(d) {
   ## estimate the Cox model
   fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
 
   ## main fitter function; ignore output
-  invisible(capture.output(ate_fit <- summary(ate(fit, 
-                                                  data = d, 
-                                                  treatment = "X1", 
-                                                  times = 5:8, 
+  invisible(capture.output(ate_fit <- summary(ate(fit,
+                                                  data = d,
+                                                  treatment = "X1",
+                                                  times = 5:8,
                                                   se = FALSE))))
   ## extract the point estimates for risk difference
   res <- ate_fit$diffRisk$estimate
@@ -132,9 +132,9 @@ ate_fit_fun <- function(d) {
   names(res) <- paste0("ATE ",
                        ate_fit$diffRisk$A,
                        "-",
-                       ate_fit$diffRisk$B, 
+                       ate_fit$diffRisk$B,
                        " (t = ",
-                       ate_fit$diffRisk$time,")") 
+                       ate_fit$diffRisk$time,")")
   res
 }
 set.seed(102)

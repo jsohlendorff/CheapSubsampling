@@ -1,19 +1,20 @@
 ## make unit tests
 test_that("cheap subsampling with function works", {
   utils::data(anorexia, package = "MASS")
-  x <- function(d)
+  x <- function(d) {
     coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  }
   set.seed(6)
   cs <- cheap_bootstrap(x, b = 10, data = anorexia)
   check <- data.frame(
     estimate = c(
-      49.7711090149846,-0.565538849639096,
+      49.7711090149846, -0.565538849639096,
       -4.0970655280729,
       4.56306265291879
     ),
     cheap_lower = c(
       15.4837723109149,
-      -0.964312324218352,-8.50522658403253,-0.420345452050825
+      -0.964312324218352, -8.50522658403253, -0.420345452050825
     ),
     cheap_upper = c(
       84.0584457190543,
@@ -35,13 +36,13 @@ test_that("cheap subsampling with model work", {
   cs <- cheap_bootstrap(x, b = 10)
   check <- data.frame(
     estimate = c(
-      49.7711090149846,-0.565538849639096,
+      49.7711090149846, -0.565538849639096,
       -4.0970655280729,
       4.56306265291879
     ),
     cheap_lower = c(
       15.4837723109149,
-      -0.964312324218352,-8.50522658403253,-0.420345452050825
+      -0.964312324218352, -8.50522658403253, -0.420345452050825
     ),
     cheap_upper = c(
       84.0584457190543,
@@ -56,8 +57,9 @@ test_that("cheap subsampling with model work", {
 
 test_that("cheap subsampling in parallel runs (function)", {
   utils::data(anorexia, package = "MASS")
-  x <- function(d)
+  x <- function(d) {
     coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  }
   set.seed(6)
   cs <- cheap_bootstrap(
     x,
@@ -74,31 +76,33 @@ test_that("cheap subsampling in parallel runs (model)", {
   x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
   set.seed(6)
   cs <- cheap_bootstrap(x,
-                        b = 10,
-                        parallelize = TRUE,
-                        cores = 2)
+    b = 10,
+    parallelize = TRUE,
+    cores = 2
+  )
   expect_output(print(cs))
 })
 
 test_that("cheap bootstrap with function works", {
   utils::data(anorexia, package = "MASS")
-  x <- function(d)
+  x <- function(d) {
     coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  }
   set.seed(6)
   cs <- cheap_bootstrap(x, b = 10, data = anorexia, type = "non_parametric")
   check <- data.frame(
     estimate = c(
       49.7711090149846,
-      -0.565538849639096,-4.0970655280729,
+      -0.565538849639096, -4.0970655280729,
       4.56306265291879
     ),
     cheap_lower = c(
-      9.04028074218562,-1.06914141201443,
+      9.04028074218562, -1.06914141201443,
       -7.86760563700546,
       -1.12128954094085
     ),
     cheap_upper = c(
-      90.5019372877836,-0.0619362872637669,
+      90.5019372877836, -0.0619362872637669,
       -0.326525419140337,
       10.2474148467784
     ),
@@ -116,16 +120,16 @@ test_that("cheap bootstrap with model works", {
   check <- data.frame(
     estimate = c(
       49.7711090149846,
-      -0.565538849639096,-4.0970655280729,
+      -0.565538849639096, -4.0970655280729,
       4.56306265291879
     ),
     cheap_lower = c(
-      9.04028074218562,-1.06914141201443,
+      9.04028074218562, -1.06914141201443,
       -7.86760563700546,
       -1.12128954094085
     ),
     cheap_upper = c(
-      90.5019372877836,-0.0619362872637669,
+      90.5019372877836, -0.0619362872637669,
       -0.326525419140337,
       10.2474148467784
     ),
@@ -136,35 +140,12 @@ test_that("cheap bootstrap with model works", {
 })
 
 test_that("error when x is not a function, but doesn't contain a call", {
-  require(survival)
-  require(riskRegression)
-  set.seed(10)
-  #### Survival settings  ####
-  #### ATE with Cox model ####
-  
-  ## generate data
-  
-  n <- 100
-  dtS <- sampleData(n, outcome = "survival")
-  dtS$time <- round(dtS$time, 1)
-  dtS$X1 <- factor(rbinom(n, prob = c(0.3, 0.4) , size = 2), labels = paste0("T", 0:2))
-  
-  ## estimate the Cox model
-  fit <- coxph(
-    formula = Surv(time, event) ~ X1 + X2,
-    data = dtS,
-    y = TRUE,
-    x = TRUE
-  )
-  ate_fit <- ate(
-    fit,
-    data = dtS,
-    treatment = "X1",
-    times = 5:8,
-    se = FALSE,
-    verbose = FALSE
-  )
-  expect_error(cheap_bootstrap(ate_fit, b = 10), "fun does not appear to have a call")
+  utils::data(anorexia, package = "MASS")
+  x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
+  x$call <- NULL
+  set.seed(6)
+  expect_error(cheap_bootstrap(x, b = 10),
+               "fun does not appear to have a call")
 })
 
 test_that("error when coef function is not defined", {
@@ -172,10 +153,10 @@ test_that("error when coef function is not defined", {
   set.seed(18)
   learndat <- sampleData(20, outcome = "binary")
   testdat <- sampleData(120, outcome = "binary")
-  
+
   ## score logistic regression models
-  lr1 = glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
-  lr2 = glm(Y ~ X3 + X5, data = learndat, family = binomial)
+  lr1 <- glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
+  lr2 <- glm(Y ~ X3 + X5, data = learndat, family = binomial)
   z <- Score(
     list("LR(X1+X2+X7+X9)" = lr1, "LR(X3+X5)" = lr2),
     formula = Y ~ 1,
@@ -191,10 +172,10 @@ test_that("error when data does not exist in parent environment", {
   require(riskRegression)
   learndat <- sampleData(20, outcome = "binary")
   testdat <- sampleData(120, outcome = "binary")
-  
+
   ## score logistic regression models
-  lr1 = glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
-  lr2 = glm(Y ~ X3 + X5, data = learndat, family = binomial)
+  lr1 <- glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
+  lr2 <- glm(Y ~ X3 + X5, data = learndat, family = binomial)
   z <- Score(
     list("LR(X1+X2+X7+X9)" = lr1, "LR(X3+X5)" = lr2),
     formula = Y ~ 1,
@@ -211,10 +192,10 @@ test_that("error when data is not in correct format", {
   require(riskRegression)
   learndat <- sampleData(20, outcome = "binary")
   testdat <- sampleData(120, outcome = "binary")
-  
+
   ## score logistic regression models
-  lr1 = glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
-  lr2 = glm(Y ~ X3 + X5, data = learndat, family = binomial)
+  lr1 <- glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
+  lr2 <- glm(Y ~ X3 + X5, data = learndat, family = binomial)
   z <- Score(
     list("LR(X1+X2+X7+X9)" = lr1, "LR(X3+X5)" = lr2),
     formula = Y ~ 1,
@@ -232,10 +213,10 @@ test_that("error when coef gives error", {
   require(riskRegression)
   learndat <- sampleData(200, outcome = "binary")
   testdat <- sampleData(1200, outcome = "binary")
-  
+
   ## score logistic regression models
-  lr1 = glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
-  lr2 = glm(Y ~ X3 + X5, data = learndat, family = binomial)
+  lr1 <- glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
+  lr2 <- glm(Y ~ X3 + X5, data = learndat, family = binomial)
   z <- Score(
     list("LR(X1+X2+X7+X9)" = lr1, "LR(X3+X5)" = lr2),
     formula = Y ~ 1,
@@ -254,10 +235,10 @@ test_that("error when coef does not return a named vector", {
   require(riskRegression)
   learndat <- sampleData(200, outcome = "binary")
   testdat <- sampleData(1200, outcome = "binary")
-  
+
   ## score logistic regression models
-  lr1 = glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
-  lr2 = glm(Y ~ X3 + X5, data = learndat, family = binomial)
+  lr1 <- glm(Y ~ X1 + X2 + X7 + X9, data = learndat, family = binomial)
+  lr2 <- glm(Y ~ X3 + X5, data = learndat, family = binomial)
   z <- Score(
     list("LR(X1+X2+X7+X9)" = lr1, "LR(X3+X5)" = lr2),
     formula = Y ~ 1,
@@ -276,14 +257,14 @@ test_that("error when bootstrap gives error", {
   require(riskRegression)
   #### Survival settings  ####
   #### ATE with Cox model ####
-  
+
   ## generate data
   set.seed(16)
   n <- 100
-  dtS <- sampleData(n, outcome = "survival")
-  dtS$time <- round(dtS$time, 1)
-  dtS$X1 <- factor(rbinom(n, prob = c(0.3, 0.4) , size = 2), labels = paste0("T", 0:2))
-  
+  dt <- sampleData(n, outcome = "survival")
+  dt$time <- round(dt$time, 1)
+  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+
   ## estimate the Cox model
   ## fitter function which returns a named vector
   ate_fit_fun <- function(d) {
@@ -320,7 +301,7 @@ test_that("error when bootstrap gives error", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dtS), "Bootstrap computation failed with error: oh no!")
+  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dt), "Bootstrap computation failed with error: oh no!")
 })
 
 test_that("error when bootstrap gives error (parallel)", {
@@ -328,14 +309,14 @@ test_that("error when bootstrap gives error (parallel)", {
   require(riskRegression)
   #### Survival settings  ####
   #### ATE with Cox model ####
-  
+
   ## generate data
   set.seed(16)
   n <- 100
-  dtS <- sampleData(n, outcome = "survival")
-  dtS$time <- round(dtS$time, 1)
-  dtS$X1 <- factor(rbinom(n, prob = c(0.3, 0.4) , size = 2), labels = paste0("T", 0:2))
-  
+  dt <- sampleData(n, outcome = "survival")
+  dt$time <- round(dt$time, 1)
+  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+
   ## estimate the Cox model
   ## fitter function which returns a named vector
   ate_fit_fun <- function(d) {
@@ -374,20 +355,22 @@ test_that("error when bootstrap gives error (parallel)", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dtS, parallelize = TRUE, cores = 2), "Bootstrap computation failed with error: 2 nodes produced errors; first error: oh no!")
+  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dt, parallelize = TRUE, cores = 2), "Bootstrap computation failed with error: 2 nodes produced errors; first error: oh no!")
 })
 
 test_that("more than one argument for parallelize", {
   utils::data(anorexia, package = "MASS")
-  x <- function(d)
+  x <- function(d) {
     coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  }
   expect_error(cheap_bootstrap(x, parallelize = c(FALSE, TRUE), data = anorexia), "parallelize must be of length 1")
 })
 
 test_that("calling fun fails", {
   utils::data(anorexia, package = "MASS")
-  x <- function(d)
+  x <- function(d) {
     stop("oh no")
+  }
   expect_error(cheap_bootstrap(x, data = anorexia), "function fun/derived from fun failed with error: oh no.\n Did you specify fun as a function or as a model object with a corresponding call and coef function?")
 })
 
@@ -395,9 +378,9 @@ test_that("fail in get_cheap_subsampling_confidence_interval", {
   utils::data(anorexia, package = "MASS")
   x <- function(d) {
     if (runif(1) < 0.5) {
-      c(a=1, b=2, b= 3)
+      c(a = 1, b = 2, b = 3)
     } else {
-      list(a=1, b = 2)
+      list(a = 1, b = 2)
     }
   }
   set.seed(8)
@@ -420,16 +403,16 @@ test_that("adaptive cheap_bootstrap functionality", {
   check <- data.frame(
     estimate = c(
       49.7711090149846,
-      -0.565538849639096,-4.0970655280729,
+      -0.565538849639096, -4.0970655280729,
       4.56306265291879
     ),
     cheap_lower = c(
-      14.6373754108099,-0.995226714362994,
+      14.6373754108099, -0.995226714362994,
       -7.63484151214865,
       -0.336391031355021
     ),
     cheap_upper = c(
-      84.9048426191593,-0.135850984915198,
+      84.9048426191593, -0.135850984915198,
       -0.559289543997145,
       9.46251633719259
     ),
@@ -458,14 +441,14 @@ test_that("error when bootstrap gives error (adapt)", {
   require(riskRegression)
   #### Survival settings  ####
   #### ATE with Cox model ####
-  
+
   ## generate data
   set.seed(16)
   n <- 100
-  dtS <- sampleData(n, outcome = "survival")
-  dtS$time <- round(dtS$time, 1)
-  dtS$X1 <- factor(rbinom(n, prob = c(0.3, 0.4) , size = 2), labels = paste0("T", 0:2))
-  
+  dt <- sampleData(n, outcome = "survival")
+  dt$time <- round(dt$time, 1)
+  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+
   ## estimate the Cox model
   ## fitter function which returns a named vector
   ate_fit_fun <- function(d) {
@@ -502,7 +485,7 @@ test_that("error when bootstrap gives error (adapt)", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, adapt = TRUE, data = dtS), "Bootstrap computation failed with error: oh no! for bootstrap iteration b = 2")
+  expect_error(cheap_bootstrap(ate_fit_fun, adapt = TRUE, data = dt), "Bootstrap computation failed with error: oh no! for bootstrap iteration b = 2")
 })
 
 
@@ -510,9 +493,9 @@ test_that("fail in get_cheap_subsampling_confidence_interval (adapt)", {
   utils::data(anorexia, package = "MASS")
   x <- function(d) {
     if (runif(1) < 0.5) {
-      c(a=1, b=2, b= 3)
+      c(a = 1, b = 2, b = 3)
     } else {
-      c(a=1, b = 2)
+      c(a = 1, b = 2)
     }
   }
   set.seed(12)
@@ -525,70 +508,70 @@ test_that("get all bootstrap interval", {
   set.seed(123)
   x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
   cs <- cheap_bootstrap(x, b = 10, data = anorexia)
-  cs <- get_all_bootstrap_confidence_intervals(cs)
+  cs <- get_bootstrap_cis(cs)
   check <- structure(
     list(
       estimate = c(
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879,
         49.7711090149846,
-        -0.565538849639096,-4.0970655280729,
+        -0.565538849639096, -4.0970655280729,
         4.56306265291879
       ),
       cheap_lower = c(
-        -79.4285481289019,-2.14168407474334,
+        -79.4285481289019, -2.14168407474334,
         -6.83259459748369,
         -24.9105778836177,
-        -17.1349397365194,-1.38492462558751,
+        -17.1349397365194, -1.38492462558751,
         -9.58065183489002,
         -9.8094121820358,
-        -7.99606974260923,-1.26214389858383,
+        -7.99606974260923, -1.26214389858383,
         -7.86034919029748,
         -6.81305174306396,
-        -0.373611667614128,-1.16460370513152,
+        -0.373611667614128, -1.16460370513152,
         -7.17502349457684,
         -4.11635652813816,
-        2.08264275995942,-1.15415769253428,
+        2.08264275995942, -1.15415769253428,
         -7.60199813788498,
         -4.42139768390172,
-        7.81489286531418,-1.08165408018403,
+        7.81489286531418, -1.08165408018403,
         -7.15910098356241,
         -3.2907927362683,
-        11.4447469284138,-1.03547780156731,
+        11.4447469284138, -1.03547780156731,
         -6.95982942370666,
         -2.47244596284023,
-        12.5040077822593,-1.01608881646726,
+        12.5040077822593, -1.01608881646726,
         -6.83584860815544,
         -2.42113556676505,
-        13.1030560803521,-1.00428979090368,
+        13.1030560803521, -1.00428979090368,
         -6.68033667893457,
         -2.15833977608044,
-        4.29275730868622,-1.11977636811514,
+        4.29275730868622, -1.11977636811514,
         -6.56115659000526,
         -2.09675989574963
       ),
@@ -613,19 +596,19 @@ test_that("get all bootstrap interval", {
         0.0230799932560849,
         -0.592132918260816,
         13.5475229897393,
-        91.727325164655,-0.0494236190941673,
+        91.727325164655, -0.0494236190941673,
         -1.03503007258339,
         12.4169180421059,
-        88.0974711015554,-0.0955998977108781,
+        88.0974711015554, -0.0955998977108781,
         -1.23430163243914,
         11.5985712686778,
-        87.0382102477099,-0.114988882810934,
+        87.0382102477099, -0.114988882810934,
         -1.35828244799036,
         11.5472608726026,
-        86.4391619496171,-0.126787908374515,
+        86.4391619496171, -0.126787908374515,
         -1.51379437721123,
         11.284465081918,
-        95.249460721283,-0.011301331163057,
+        95.249460721283, -0.011301331163057,
         -1.63297446614053,
         11.2228852015872
       ),
@@ -726,8 +709,8 @@ test_that("get all bootstrap interval", {
   set.seed(123)
   x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
   cs <- cheap_bootstrap(x, b = 10, data = anorexia)
-  cs$boot_estimates <- list(a=1, b=2)
-  expect_error(get_all_bootstrap_confidence_intervals(cs), "Computation of confidence intervals failed with error: incorrect number of dimensions for b = 1")
+  cs$boot_estimates <- list(a = 1, b = 2)
+  expect_error(get_bootstrap_cis(cs), "Computation of confidence intervals failed with error: incorrect number of dimensions for b = 1")
 })
 
 test_that("get all bootstrap interval", {
@@ -736,5 +719,5 @@ test_that("get all bootstrap interval", {
   set.seed(123)
   x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
   cs <- cheap_bootstrap(x, b = 10, data = anorexia, keep_boot_estimates = FALSE)
-  expect_error(get_all_bootstrap_confidence_intervals(cs), "No bootstrap estimates found in x")
+  expect_error(get_bootstrap_cis(cs), "No bootstrap estimates found in x")
 })
