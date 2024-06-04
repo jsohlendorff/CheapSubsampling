@@ -824,7 +824,9 @@ test_that("fail in get_cheap_subsampling_confidence_interval (adapt)", {
   set.seed(8)
   ## note does not let me test
   expect_error(
-    suppressWarnings(cheap_bootstrap(x, data = anorexia, 
-                                     adapt_args = list(adapt = TRUE, precision = 0.1, max_b = 200)))
+    suppressWarnings(cheap_bootstrap(x,
+      data = anorexia,
+      adapt_args = list(adapt = TRUE, precision = 0.1, max_b = 200)
+    ))
   )
 })
