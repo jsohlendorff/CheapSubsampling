@@ -811,3 +811,20 @@ test_that("get all bootstrap interval", {
   )
   expect_error(get_bootstrap_cis(cs), "No bootstrap estimates found in x")
 })
+
+test_that("fail in get_cheap_subsampling_confidence_interval (adapt)", {
+  utils::data(anorexia, package = "MASS")
+  x <- function(d) {
+    if (runif(1) < 0.5) {
+      c(a = 1, b = 2, b = 3)
+    } else {
+      list(a = 1, b = 2)
+    }
+  }
+  set.seed(8)
+  ## note does not let me test
+  expect_error(
+    suppressWarnings(cheap_bootstrap(x, data = anorexia, 
+                                     adapt_args = list(adapt = TRUE, precision = 0.1, max_b = 200)))
+  )
+})
