@@ -25,7 +25,8 @@ The user can vary the number of bootstrap samples and the subsample size.
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt),
+                           data = d))
 shiny_cheap_bootstrap(fun, data = anorexia)
 }
 }

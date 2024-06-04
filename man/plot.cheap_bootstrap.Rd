@@ -10,7 +10,8 @@
 \item{x}{An object of class "cheap_bootstrap"}
 
 \item{...}{Not applicable.
-Plots the point estimates and confidence intervals as a function of the number of bootstrap samples.}
+Plots the point estimates and confidence intervals
+as a function of the number of bootstrap samples.}
 }
 \description{
 Plot method for cheap_bootstrap objects

@@ -6,19 +6,14 @@
 \usage{
 cheap_bootstrap(
   fun,
+  data = NULL,
   b = 20,
   size = NULL,
   alpha = 0.05,
-  keep_boot_estimates = TRUE,
-  parallelize = FALSE,
-  cores = parallel::detectCores(),
-  data = NULL,
-  progress_bar = TRUE,
   type = "subsampling",
-  adapt = FALSE,
-  precision = 0.1,
-  max_b = 200,
-  print_current_precision = FALSE
+  parallel_args = list(parallelize = FALSE, cores = 2),
+  adapt_args = list(adapt = FALSE, precision = 0.1, max_b = 200),
+  additional_args = list(keep_boot_estimates = TRUE, verbose = TRUE)
 )
 }
 \arguments{
@@ -26,36 +21,41 @@ cheap_bootstrap(
 model object which saves the call. In the second case, a coef
 needs to be defined for 'class(fun)'.}
 
+\item{data}{Data set to be used for the computation, if applicable.}
+
 \item{b}{Number of bootstrap samples.}
 
 \item{size}{Subsample size. Defaults to 0.632 * nrow(data).}
 
 \item{alpha}{Significance level. Defaults to 0.05.}
 
-\item{keep_boot_estimates}{Logical.
-Should the bootstrap estimates be kept? Defaults to FALSE.}
-
-\item{parallelize}{Logical.
-Should the bootstrap samples be computed in parallel?
-Defaults to FALSE. Ignored for adaptive method.}
-
-\item{cores}{Number of cores to use for parallel computation, if parallelize = TRUE.
-Defaults to detectCores().}
-
-\item{data}{Data set to be used for the computation, if applicable.}
-
-\item{progress_bar}{Logical. Should a progress bar be displayed? Defaults to TRUE.}
-
-\item{type}{Character. Type of bootstrap method. Can be either "subsampling" or "non_parametric".
+\item{type}{Character. Type of bootstrap method.
+Can be either "subsampling" or "non_parametric".
 Defaults to "subsampling".}
 
-\item{adapt}{Logical. Should the number of bootstrap samples be adaptively chosen? Defaults to FALSE.}
+\item{parallel_args}{List of arguments for parallel computation.
+The first element parallelize should be a logical.
+Should the bootstrap samples be computed in parallel?
+Defaults to FALSE.
+The second element cores should be an integer.
+Number of cores to use for parallel computation,
+if parallelize = TRUE. Defaults to 2.}
 
-\item{precision}{Numeric. Desired precision of the confidence interval(s). Defaults to 0.1.}
+\item{adapt_args}{List of arguments for adaptive computation.
+The first element adapt should be a logical.
+Should the number of bootstrap samples be adaptively chosen?
+Defaults to FALSE.
+The second element precision should be a numeric.
+Desired precision of the confidence interval(s). Defaults to 0.1.
+The third element max_b should be an integer.
+Maximum number of bootstrap samples to be taken. Defaults to 200.}
 
-\item{max_b}{Integer. Maximum number of bootstrap samples to be taken. Defaults to 200.}
-
-\item{print_current_precision}{Logical. Should the current precision be printed? Defaults to FALSE.}
+\item{additional_args}{List of additional arguments.
+The first element keep_boot_estimates should be a logical.
+Should the bootstrap estimates be kept? Defaults to FALSE.
+The second element verbose should be a logical.
+Should a progress bar be displayed or if adapt = TRUE,
+the current precision printed.}
 }
 \value{
 An object of class "cheap_bootstrap" containing
@@ -74,30 +74,45 @@ the cheap subsampling method.
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
-cs <- cheap_bootstrap(fun=fun, b = 20, data = anorexia)
+fun <- function(data) {
+  coef(lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+}
+cs <- cheap_bootstrap(fun = fun, b = 20, data = anorexia)
 cs
 summary(cs)
 
 ## example with a model object
 set.seed(123)
 x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
-cs2 <- cheap_bootstrap(fun=x, b = 20)
+cs2 <- cheap_bootstrap(fun = x, b = 20)
 summary(cs2)
 
 ## example with adaptive method
 set.seed(123)
-fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
-cs <- cheap_bootstrap(fun=fun, data = anorexia, adapt = TRUE, precision = 0.1, max_b = 200)
+fun <- function(data) {
+  coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+}
+cs <- cheap_bootstrap(fun = fun,
+                      data = anorexia,
+                      adapt_args = list(adapt = TRUE,
+                                        precision = 0.1,
+                                        max_b = 200))
 cs
 summary(cs)
 
 ## example with a function call and parallel computation
 \dontrun{
 set.seed(123)
-## note the function needs to load the packages needed for the computation if parallelized
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-cs3 <- cheap_bootstrap(fun=x, b = 20, data = anorexia, parallelize = TRUE, cores = 2)
+## note the function needs to load the packages needed
+## for the computation if parallelized
+x <- function(data) {
+  coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+}
+cs3 <- cheap_bootstrap(fun = x,
+                       b = 20,
+                       data = anorexia,
+                       parallel_args = list(parallelize = TRUE,
+                                            cores = 2))
 summary(cs3)
 
 ## example with custom function returning coefficients
@@ -111,14 +126,17 @@ set.seed(10)
 ## generate data
 
 n <- 100
-dtS <- sampleData(n, outcome="survival")
-dtS$time <- round(dtS$time,1)
-dtS$X1 <- factor(rbinom(n, prob = c(0.3,0.4) , size = 2), labels = paste0("T",0:2))
+dt <- sampleData(n, outcome="survival")
+dt$time <- round(dt$time, 1)
+dt$X1 <- factor(rbinom(n,
+                       prob = c(0.3,0.4),
+                       size = 2),
+                 labels = paste0("T",0:2))
 
 ## fitter function which returns a named vector
 ate_fit_fun <- function(d) {
   ## estimate the Cox model
-  fit <- coxph(formula = Surv(time,event)~ X1+X2,data=dtS,y=TRUE,x=TRUE)
+  fit <- coxph(formula = Surv(time,event)~ X1+X2,data=d,y=TRUE,x=TRUE)
 
   ## main fitter function; ignore output
   invisible(capture.output(ate_fit <- summary(ate(fit,
@@ -138,7 +156,9 @@ ate_fit_fun <- function(d) {
   res
 }
 set.seed(102)
-cs4 <- cheap_bootstrap(ate_fit_fun, b = 5, data = dtS)
+cs4 <- cheap_bootstrap(ate_fit_fun,
+                       b = 5,
+                       data = dt)
 summary(cs4)
 
 ## example from riskRegression with no existing coef function

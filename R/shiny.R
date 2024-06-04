@@ -31,7 +31,10 @@ get_shiny_panel <- function(n_val) {
       value = parallel::detectCores() - 1,
       step = 1
     ),
-    shiny::checkboxInput("parallelize", "Parallelize computation", value = FALSE),
+    shiny::checkboxInput("parallelize",
+      "Parallelize computation",
+      value = FALSE
+    ),
     shiny::selectInput(
       "type",
       "Bootstrap type",
@@ -58,7 +61,8 @@ get_shiny_panel <- function(n_val) {
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
-##' fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt),
+##'                            data = d))
 ##' shiny_cheap_bootstrap(fun, data = anorexia)
 ##' }
 shiny_cheap_bootstrap <- function(fun, data = NULL) {
@@ -87,11 +91,16 @@ shiny_cheap_bootstrap <- function(fun, data = NULL) {
           b = input$b,
           size = input$size,
           alpha = input$alpha,
-          parallelize = input$parallelize,
-          cores = input$cores,
+          parallel_args = list(
+            parallelize = input$parallelize,
+            cores = input$cores
+          ),
+          additional_args = list(
+            keep_boot_estimates = TRUE,
+            verbose = FALSE
+          ),
           data = data,
-          type = input$type,
-          progress_bar = FALSE
+          type = input$type
         )$res
       })
     })
@@ -113,7 +122,9 @@ shiny_cheap_bootstrap <- function(fun, data = NULL) {
 ##' utils::data(anorexia, package = "MASS")
 ##' ## example with a function call
 ##' set.seed(123)
-##' fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' fun <- function(d) {
+##'   coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+##' }
 ##' shiny_cheap_bootstrap_plot(fun, data = anorexia)
 ##' }
 ##'
@@ -137,11 +148,16 @@ shiny_cheap_bootstrap_plot <- function(fun, data = NULL) {
           b = input$b,
           size = input$size,
           alpha = input$alpha,
-          parallelize = input$parallelize,
-          cores = input$cores,
+          parallel_args = list(
+            parallelize = input$parallelize,
+            cores = input$cores
+          ),
+          additional_args = list(
+            keep_boot_estimates = TRUE,
+            verbose = FALSE
+          ),
           data = data,
-          type = input$type,
-          progress_bar = FALSE
+          type = input$type
         )
       ))
     })

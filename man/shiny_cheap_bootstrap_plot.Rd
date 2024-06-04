@@ -21,7 +21,9 @@ Shiny app for cheap subsampling plot
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
-fun <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+fun <- function(d) {
+  coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+}
 shiny_cheap_bootstrap_plot(fun, data = anorexia)
 }
 

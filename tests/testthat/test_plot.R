@@ -7,8 +7,7 @@ test_that("plot function", {
   }
   cs <- cheap_bootstrap(x,
     b = 10,
-    data = anorexia,
-    progress_bar = FALSE
+    data = anorexia
   )
   expect_no_error(plot(cs))
 })
@@ -24,8 +23,7 @@ test_that("plot function (bootstrap)", {
     x,
     b = 10,
     data = anorexia,
-    type = "non_parametric",
-    progress_bar = FALSE
+    type = "non_parametric"
   )
   expect_no_error(plot(cs))
 })

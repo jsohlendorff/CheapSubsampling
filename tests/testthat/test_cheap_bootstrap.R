@@ -65,8 +65,10 @@ test_that("cheap subsampling in parallel runs (function)", {
     x,
     b = 10,
     data = anorexia,
-    parallelize = TRUE,
-    cores = 2
+    parallel_args = list(
+      parallelize = TRUE,
+      cores = 2
+    )
   )
   expect_output(print(cs))
 })
@@ -77,8 +79,7 @@ test_that("cheap subsampling in parallel runs (model)", {
   set.seed(6)
   cs <- cheap_bootstrap(x,
     b = 10,
-    parallelize = TRUE,
-    cores = 2
+    parallel_args = list(parallelize = TRUE, cores = 2)
   )
   expect_output(print(cs))
 })
@@ -144,8 +145,10 @@ test_that("error when x is not a function, but doesn't contain a call", {
   x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
   x$call <- NULL
   set.seed(6)
-  expect_error(cheap_bootstrap(x, b = 10),
-               "fun does not appear to have a call")
+  expect_error(
+    cheap_bootstrap(x, b = 10),
+    "fun does not appear to have a call"
+  )
 })
 
 test_that("error when coef function is not defined", {
@@ -164,7 +167,10 @@ test_that("error when coef function is not defined", {
     metrics = "AUC"
   )
   set.seed(102)
-  expect_error(cheap_bootstrap(z, b = 10), "function fun/derived from fun did not return a named vector of coefficients")
+  expect_error(
+    cheap_bootstrap(z, b = 10),
+    "function fun/derived from fun did not return a named vector of coefficients"
+  )
 })
 
 test_that("error when data does not exist in parent environment", {
@@ -184,7 +190,10 @@ test_that("error when data does not exist in parent environment", {
   )
   remove(testdat)
   set.seed(102)
-  expect_error(cheap_bootstrap(z, b = 10), "data not found in environment or missing from call object")
+  expect_error(
+    cheap_bootstrap(z, b = 10),
+    "data not found in environment or missing from call object"
+  )
 })
 
 test_that("error when data is not in correct format", {
@@ -204,8 +213,14 @@ test_that("error when data is not in correct format", {
   )
   testdat <- 2
   set.seed(102)
-  expect_error(cheap_bootstrap(z, b = 10), "Data needs to be a data frame")
-  expect_error(get_data_and_call(z, data = NULL, environment()), "Data needs to be a data frame") ## test in function, otherwise covr does not pick it up
+  expect_error(
+    cheap_bootstrap(z, b = 10),
+    "Data needs to be a data frame"
+  )
+  expect_error(
+    get_data_and_call(z, data = NULL, environment()),
+    "Data needs to be a data frame"
+  )
 })
 
 test_that("error when coef gives error", {
@@ -227,7 +242,10 @@ test_that("error when coef gives error", {
     stop("oh no")
   }
   set.seed(102)
-  expect_error(cheap_bootstrap(z, b = 10), "function fun/derived from fun failed with error: oh no.\n Did you specify fun as a function or as a model object with a corresponding call and coef function?")
+  expect_error(
+    cheap_bootstrap(z, b = 10),
+    "function fun/derived from fun failed with error: oh no.\n Did you specify fun as a function or as a model object with a corresponding call and coef function?"
+  )
 })
 
 test_that("error when coef does not return a named vector", {
@@ -249,7 +267,10 @@ test_that("error when coef does not return a named vector", {
     list(a = 2)
   }
   set.seed(102)
-  expect_error(cheap_bootstrap(z, b = 10), "function fun/derived from fun did not return a named vector of coefficients")
+  expect_error(
+    cheap_bootstrap(z, b = 10),
+    "function fun/derived from fun did not return a named vector of coefficients"
+  )
 })
 
 test_that("error when bootstrap gives error", {
@@ -263,7 +284,13 @@ test_that("error when bootstrap gives error", {
   n <- 100
   dt <- sampleData(n, outcome = "survival")
   dt$time <- round(dt$time, 1)
-  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+  dt$X1 <- factor(
+    rbinom(n,
+      prob = c(0.3, 0.4),
+      size = 2
+    ),
+    labels = paste0("T", 0:2)
+  )
 
   ## estimate the Cox model
   ## fitter function which returns a named vector
@@ -284,7 +311,8 @@ test_that("error when bootstrap gives error", {
         se = FALSE
       )
     ))))
-    res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
+    ## extract the point estimates for risk difference
+    res <- ate_fit$diffRisk$estimate
     ## name the point estimates
     names(res) <- paste0(
       "ATE ",
@@ -301,7 +329,10 @@ test_that("error when bootstrap gives error", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dt), "Bootstrap computation failed with error: oh no!")
+  expect_error(
+    cheap_bootstrap(ate_fit_fun, b = 10, data = dt),
+    "Bootstrap computation failed with error: oh no!"
+  )
 })
 
 test_that("error when bootstrap gives error (parallel)", {
@@ -315,7 +346,13 @@ test_that("error when bootstrap gives error (parallel)", {
   n <- 100
   dt <- sampleData(n, outcome = "survival")
   dt$time <- round(dt$time, 1)
-  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+  dt$X1 <- factor(
+    rbinom(n,
+      prob = c(0.3, 0.4),
+      size = 2
+    ),
+    labels = paste0("T", 0:2)
+  )
 
   ## estimate the Cox model
   ## fitter function which returns a named vector
@@ -338,7 +375,8 @@ test_that("error when bootstrap gives error (parallel)", {
         se = FALSE
       )
     ))))
-    res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
+    ## extract the point estimates for risk difference
+    res <- ate_fit$diffRisk$estimate
     ## name the point estimates
     names(res) <- paste0(
       "ATE ",
@@ -355,7 +393,17 @@ test_that("error when bootstrap gives error (parallel)", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, b = 10, data = dt, parallelize = TRUE, cores = 2), "Bootstrap computation failed with error: 2 nodes produced errors; first error: oh no!")
+  expect_error(
+    cheap_bootstrap(ate_fit_fun,
+      b = 10,
+      data = dt,
+      parallel_args = list(
+        parallelize = TRUE,
+        cores = 2
+      )
+    ),
+    "Bootstrap computation failed with error: 2 nodes produced errors; first error: oh no!"
+  )
 })
 
 test_that("more than one argument for parallelize", {
@@ -363,7 +411,14 @@ test_that("more than one argument for parallelize", {
   x <- function(d) {
     coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
   }
-  expect_error(cheap_bootstrap(x, parallelize = c(FALSE, TRUE), data = anorexia), "parallelize must be of length 1")
+  parallel_args <- list(parallelize = c(FALSE, TRUE))
+  expect_error(
+    cheap_bootstrap(x,
+      parallel_args = parallel_args,
+      data = anorexia
+    ),
+    "parallelize must be of length 1"
+  )
 })
 
 test_that("calling fun fails", {
@@ -371,7 +426,10 @@ test_that("calling fun fails", {
   x <- function(d) {
     stop("oh no")
   }
-  expect_error(cheap_bootstrap(x, data = anorexia), "function fun/derived from fun failed with error: oh no.\n Did you specify fun as a function or as a model object with a corresponding call and coef function?")
+  expect_error(
+    cheap_bootstrap(x, data = anorexia),
+    "function fun/derived from fun failed with error: oh no.\n Did you specify fun as a function or as a model object with a corresponding call and coef function?"
+  )
 })
 
 test_that("fail in get_cheap_subsampling_confidence_interval", {
@@ -384,21 +442,27 @@ test_that("fail in get_cheap_subsampling_confidence_interval", {
     }
   }
   set.seed(8)
-  expect_error(suppressWarnings(cheap_bootstrap(x, data = anorexia)), "Computation of confidence intervals failed with error: non-numeric argument to binary operator. Does your function return a vector of coefficients?")
+  expect_error(
+    suppressWarnings(cheap_bootstrap(x, data = anorexia)),
+    "Computation of confidence intervals failed with error: non-numeric argument to binary operator. Does your function return a vector of coefficients?"
+  )
 })
 
 test_that("adaptive cheap_bootstrap functionality", {
   ## example with adaptive method
   utils::data(anorexia, package = "MASS")
   set.seed(123)
-  fun <- function(data) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+  fun <- function(data) {
+    coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+  }
   cs <- cheap_bootstrap(
     fun = fun,
     data = anorexia,
-    adapt = TRUE,
-    precision = 0.1,
-    max_b = 200,
-    print_current_precision = TRUE
+    adapt_args = list(
+      adapt = TRUE,
+      precision = 0.1,
+      max_b = 200
+    )
   )
   check <- data.frame(
     estimate = c(
@@ -423,9 +487,11 @@ test_that("adaptive cheap_bootstrap functionality", {
   cs <- cheap_bootstrap(
     fun = fun,
     data = anorexia,
-    adapt = TRUE,
-    precision = 0.001,
-    max_b = 20
+    adapt_args = list(
+      adapt = TRUE,
+      precision = 0.001,
+      max_b = 20
+    )
   )
   set.seed(5)
   cs2 <- cheap_bootstrap(
@@ -447,7 +513,13 @@ test_that("error when bootstrap gives error (adapt)", {
   n <- 100
   dt <- sampleData(n, outcome = "survival")
   dt$time <- round(dt$time, 1)
-  dt$X1 <- factor(rbinom(n, prob = c(0.3, 0.4), size = 2), labels = paste0("T", 0:2))
+  dt$X1 <- factor(
+    rbinom(n,
+      prob = c(0.3, 0.4),
+      size = 2
+    ),
+    labels = paste0("T", 0:2)
+  )
 
   ## estimate the Cox model
   ## fitter function which returns a named vector
@@ -468,7 +540,8 @@ test_that("error when bootstrap gives error (adapt)", {
         se = FALSE
       )
     ))))
-    res <- ate_fit$diffRisk$estimate ## extract the point estimates for risk difference
+    ## extract the point estimates for risk difference
+    res <- ate_fit$diffRisk$estimate
     ## name the point estimates
     names(res) <- paste0(
       "ATE ",
@@ -485,7 +558,17 @@ test_that("error when bootstrap gives error (adapt)", {
     res
   }
   set.seed(105)
-  expect_error(cheap_bootstrap(ate_fit_fun, adapt = TRUE, data = dt), "Bootstrap computation failed with error: oh no! for bootstrap iteration b = 2")
+  expect_error(
+    cheap_bootstrap(ate_fit_fun,
+      adapt_args = list(
+        adapt = TRUE,
+        precision = 0.1,
+        max_b = 200
+      ),
+      data = dt
+    ),
+    "Bootstrap computation failed with error: oh no! for bootstrap iteration b = 2"
+  )
 })
 
 
@@ -710,7 +793,10 @@ test_that("get all bootstrap interval", {
   x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
   cs <- cheap_bootstrap(x, b = 10, data = anorexia)
   cs$boot_estimates <- list(a = 1, b = 2)
-  expect_error(get_bootstrap_cis(cs), "Computation of confidence intervals failed with error: incorrect number of dimensions for b = 1")
+  expect_error(
+    get_bootstrap_cis(cs),
+    "Computation of confidence intervals failed with error: incorrect number of dimensions for b = 1"
+  )
 })
 
 test_that("get all bootstrap interval", {
@@ -718,6 +804,10 @@ test_that("get all bootstrap interval", {
   ## example with a function call
   set.seed(123)
   x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-  cs <- cheap_bootstrap(x, b = 10, data = anorexia, keep_boot_estimates = FALSE)
+  cs <- cheap_bootstrap(x,
+    b = 10,
+    data = anorexia,
+    additional_args = list(keep_boot_estimates = FALSE, verbose = FALSE)
+  )
   expect_error(get_bootstrap_cis(cs), "No bootstrap estimates found in x")
 })
