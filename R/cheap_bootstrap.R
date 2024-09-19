@@ -285,7 +285,50 @@ cheap_bootstrap <- function(fun,
       stop(paste(var_name, "must be of length 1"))
     }
   }
+  run_bootstraps <- function(b, seeds, parallel, cl = NULL, verbose = FALSE, pb = NULL) {
+    b_fun <- function(i) {
+      set.seed(seeds[i])
+      if (verbose) {
+        utils::setTxtProgressBar(pb, i)
+      }
+      tryCatch(
+        {
+          fun(data[
+            sample(1:n_val,
+                   size,
+                   replace = (type == "non_parametric")
+            ), ,
+            drop = FALSE
+          ])
+        },
+        error = function(e) {
+          stop(
+            "Bootstrap computation failed with error: ",
+            conditionMessage(e),
+            " for iteration ", i," with the seed ", seeds[i]
+          )
+        }
+      )
+    }
+    if (parallel) {
+      results <- parallel::parLapply(cl, seq_len(b), b_fun)
+    } else {
+      results <- lapply(seq_len(b), b_fun)
+    }
+    tryCatch(
+      {
+        boot_est <- do.call("rbind", results)
+      },
+      error = function(e) {
+        stop("Could not bind the results. Did you return a vector of coefficients?")
+      }
+    )
+    boot_est
+  }
 
+  ## sample b seeds
+  seeds <- sample.int(1e+09, b)
+  
   if (adapt) {
     b <- 1
 
@@ -355,33 +398,12 @@ cheap_bootstrap <- function(fun,
   } else if (parallelize) {
     requireNamespace("parallel")
     cl <- parallel::makeCluster(cores)
-    parallel::clusterExport(cl, c("fun", "b", "size", "alpha", "data", "type"),
+    ## sample b seeds
+    seeds <- sample.int(1e+09, b)
+    parallel::clusterExport(cl, c("fun", "b", "size", "alpha", "data", "type", "seeds","verbose"),
       envir = environment()
     )
-    tryCatch(
-      {
-        boot_est <- do.call(
-          "rbind",
-          parallel::parLapply(cl, seq_len(b), function(i) {
-            fun(data[
-              sample(1:n_val,
-                size,
-                replace = (type == "non_parametric")
-              ), ,
-              drop = FALSE
-            ])
-          })
-        )
-        parallel::stopCluster(cl)
-      },
-      error = function(e) {
-        parallel::stopCluster(cl)
-        stop(
-          "Bootstrap computation failed with error: ",
-          conditionMessage(e)
-        )
-      }
-    )
+    boot_est <- run_bootstraps(b = b, seeds = seeds, parallel = TRUE, cl = cl, verbose = FALSE)
   } else {
     if (verbose) {
       pb <- utils::txtProgressBar(
@@ -392,28 +414,7 @@ cheap_bootstrap <- function(fun,
         char = "="
       )
     }
-    tryCatch(
-      {
-        boot_est <- do.call("rbind", lapply(seq_len(b), function(i) {
-          if (verbose) {
-            utils::setTxtProgressBar(pb, i)
-          }
-          fun(data[
-            sample(1:n_val,
-              size,
-              replace = (type == "non_parametric")
-            ), ,
-            drop = FALSE
-          ])
-        }))
-      },
-      error = function(e) {
-        stop(
-          "Bootstrap computation failed with error: ",
-          conditionMessage(e)
-        )
-      }
-    )
+    boot_est <- run_bootstraps(b = b, seeds = seeds, parallel = FALSE, verbose = verbose, pb = pb)
   }
   if (verbose) {
     cat("\n")
