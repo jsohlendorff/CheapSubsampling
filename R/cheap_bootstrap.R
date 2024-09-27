@@ -311,7 +311,7 @@ cheap_bootstrap <- function(fun,
       )
     }
     if (parallel) {
-      results <- parallel::mclapply(seq_len(b), b_fun, mc.cores = cores)
+      results <- pbmcapply::pbmclapply(X=seq_len(b), FUN=b_fun, mc.cores = cores)
     } else {
       results <- lapply(seq_len(b), b_fun)
     }
