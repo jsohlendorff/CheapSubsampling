@@ -285,7 +285,7 @@ cheap_bootstrap <- function(fun,
       stop(paste(var_name, "must be of length 1"))
     }
   }
-  run_bootstraps <- function(b, seeds, parallel, cl = NULL, verbose = FALSE, pb = NULL) {
+  run_bootstraps <- function(b, seeds, parallel, verbose = FALSE, cores = 2, pb = NULL) {
     b_fun <- function(i) {
       set.seed(seeds[i])
       if (verbose) {
@@ -311,7 +311,7 @@ cheap_bootstrap <- function(fun,
       )
     }
     if (parallel) {
-      results <- parallel::parLapply(cl, seq_len(b), b_fun)
+      results <- parallel::mclapply(seq_len(b), b_fun, mc.cores = cores)
     } else {
       results <- lapply(seq_len(b), b_fun)
     }
@@ -397,13 +397,9 @@ cheap_bootstrap <- function(fun,
     }
   } else if (parallelize) {
     requireNamespace("parallel")
-    cl <- parallel::makeCluster(cores)
     ## sample b seeds
     seeds <- sample.int(1e+09, b)
-    parallel::clusterExport(cl, c("fun", "b", "size", "alpha", "data", "type", "seeds","verbose"),
-      envir = environment()
-    )
-    boot_est <- run_bootstraps(b = b, seeds = seeds, parallel = TRUE, cl = cl, verbose = FALSE)
+    boot_est <- run_bootstraps(b = b, seeds = seeds, parallel = TRUE, cores = parallel_args$cores, verbose = FALSE, pb = NULL)
   } else {
     if (verbose) {
       pb <- utils::txtProgressBar(

@@ -320,14 +320,14 @@ test_that("error when bootstrap gives error (parallel)", {
   }
   set.seed(105)
   expect_error(
-    cheap_bootstrap(ate_fit_fun,
+    suppressWarnings(cheap_bootstrap(ate_fit_fun,
       b = 10,
       data = dt,
       parallel_args = list(
         parallelize = TRUE,
         cores = 2
       )
-    )
+    ))
   )
 })
 
