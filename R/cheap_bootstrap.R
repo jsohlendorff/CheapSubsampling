@@ -89,7 +89,7 @@ cheap_bootstrap <- function(fun,
                             parallelize = FALSE,
                             cores = 1,
                             keep_estimates = TRUE) {
-  estimate <- b_est <- ..keep <- ..keep_names <- NULL
+  estimate <- b_est <- keep <- keep_names <- NULL
   ## Check if the data is a data.frame
   if (!inherits(data, "data.frame")) {
     stop("data must inherit data.frame")
