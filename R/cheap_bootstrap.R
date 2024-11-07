@@ -140,6 +140,7 @@ cheap_bootstrap <- function(fun,
   }
   
   est <- data.table::as.data.table(est)
+  org_val <- est
   
   ## Check that est_col_name and par_col_names are in the names of columns of est
   if (!(est_col_name %in% colnames(est)) || 
@@ -233,7 +234,8 @@ cheap_bootstrap <- function(fun,
     type = type,
     alpha = alpha,
     n = n_dat,
-    par_col_names = par_col_names
+    par_col_names = par_col_names,
+    org_val = org_val
   )
   if (keep_estimates) {
     res <- c(res, list(boot_estimates = boot_est))
