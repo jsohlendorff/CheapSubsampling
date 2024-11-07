@@ -2,28 +2,15 @@ test_that("plot function", {
   utils::data(anorexia, package = "MASS")
   ## example with a function call
   set.seed(123)
-  x <- function(d) {
-    coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
+  library(broom)
+  fun <- function(data) {
+    lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) %>%
+      tidy()
   }
-  cs <- cheap_bootstrap(x,
-    b = 10,
-    data = anorexia
-  )
-  expect_no_error(plot(cs))
-})
-
-test_that("plot function (bootstrap)", {
-  utils::data(anorexia, package = "MASS")
-  ## example with a function call
-  set.seed(123)
-  x <- function(d) {
-    coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-  }
-  cs <- cheap_bootstrap(
-    x,
-    b = 10,
-    data = anorexia,
-    type = "non_parametric"
-  )
+  cs <- cheap_bootstrap(fun = fun, 
+                        b = 20, 
+                        data = anorexia,
+                        est_col_name = "estimate",
+                        par_col_names = "term")
   expect_no_error(plot(cs))
 })

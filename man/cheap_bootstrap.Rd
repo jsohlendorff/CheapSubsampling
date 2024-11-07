@@ -6,56 +6,43 @@
 \usage{
 cheap_bootstrap(
   fun,
-  data = NULL,
-  b = 20,
+  data,
   size = NULL,
-  alpha = 0.05,
   type = "subsampling",
-  parallel_args = list(parallelize = FALSE, cores = 2),
-  adapt_args = list(adapt = FALSE, precision = 0.1, max_b = 200),
-  additional_args = list(keep_boot_estimates = TRUE, verbose = TRUE)
+  b = 20,
+  est_col_name = "estimate",
+  par_col_names = "parameter",
+  alpha = 0.05,
+  parallelize = FALSE,
+  cores = 1,
+  keep_estimates = TRUE
 )
 }
 \arguments{
-\item{fun}{A function that returns a vector of coefficients or a
-model object which saves the call. In the second case, a coef
-needs to be defined for 'class(fun)'.}
+\item{fun}{A function that returns a data.frame with the point estimates given
+in est_col_name and the corresponding parameter names in par_col_names.}
 
-\item{data}{Data set to be used for the computation, if applicable.}
-
-\item{b}{Number of bootstrap samples.}
+\item{data}{Data set to be used for the computation.}
 
 \item{size}{Subsample size. Defaults to 0.632 * nrow(data).}
-
-\item{alpha}{Significance level. Defaults to 0.05.}
 
 \item{type}{Character. Type of bootstrap method.
 Can be either "subsampling" or "non_parametric".
 Defaults to "subsampling".}
 
-\item{parallel_args}{List of arguments for parallel computation.
-The first element parallelize should be a logical.
-Should the bootstrap samples be computed in parallel?
-Defaults to FALSE.
-The second element cores should be an integer.
-Number of cores to use for parallel computation,
-if parallelize = TRUE. Defaults to 2.}
+\item{b}{Number of bootstrap samples.}
 
-\item{adapt_args}{List of arguments for adaptive computation.
-The first element adapt should be a logical.
-Should the number of bootstrap samples be adaptively chosen?
-Defaults to FALSE.
-The second element precision should be a numeric.
-Desired precision of the confidence interval(s). Defaults to 0.1.
-The third element max_b should be an integer.
-Maximum number of bootstrap samples to be taken. Defaults to 200.}
+\item{est_col_name}{Character. Column name of the point estimates.}
 
-\item{additional_args}{List of additional arguments.
-The first element keep_boot_estimates should be a logical.
-Should the bootstrap estimates be kept? Defaults to FALSE.
-The second element verbose should be a logical.
-Should a progress bar be displayed or if adapt = TRUE,
-the current precision printed.}
+\item{par_col_names}{Character. Column names of the parameter names.}
+
+\item{alpha}{Significance level. Defaults to 0.05.}
+
+\item{parallelize}{Logical. Should the computation be parallelized?}
+
+\item{cores}{Number of cores to be used for parallel computation.}
+
+\item{keep_estimates}{Logical. Should the bootstrapped estimates be kept?}
 }
 \value{
 An object of class "cheap_bootstrap" containing
@@ -74,113 +61,32 @@ the cheap subsampling method.
 utils::data(anorexia, package = "MASS")
 ## example with a function call
 set.seed(123)
+library(broom)
+library(dplyr)
 fun <- function(data) {
-  coef(lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data))
+  lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) \%>\%
+  tidy() 
 }
-cs <- cheap_bootstrap(fun = fun, b = 20, data = anorexia)
-cs
-summary(cs)
-
-## example with a model object
-set.seed(123)
-x <- lm(Postwt ~ Prewt + Treat + offset(Prewt), data = anorexia)
-cs2 <- cheap_bootstrap(fun = x, b = 20)
-summary(cs2)
-
-## example with adaptive method
-set.seed(123)
-fun <- function(data) {
-  coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
-}
-cs <- cheap_bootstrap(fun = fun,
+cs <- cheap_bootstrap(fun = fun, 
+                      b = 20, 
                       data = anorexia,
-                      adapt_args = list(adapt = TRUE,
-                                        precision = 0.1,
-                                        max_b = 200))
+                      est_col_name = "estimate",
+                      par_col_names = "term")
 cs
 summary(cs)
+plot(cs)
 
 ## example with a function call and parallel computation
 \dontrun{
 set.seed(123)
 ## note the function needs to load the packages needed
 ## for the computation if parallelized
-x <- function(data) {
-  coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = data))
-}
-cs3 <- cheap_bootstrap(fun = x,
-                       b = 20,
-                       data = anorexia,
-                       parallel_args = list(parallelize = TRUE,
-                                            cores = 2))
-summary(cs3)
-
-## example with custom function returning coefficients
-## example from ATE-package
-library(survival)
-library(riskRegression)
-set.seed(10)
-#### Survival settings  ####
-#### ATE with Cox model ####
-
-## generate data
-
-n <- 100
-dt <- sampleData(n, outcome="survival")
-dt$time <- round(dt$time, 1)
-dt$X1 <- factor(rbinom(n,
-                       prob = c(0.3,0.4),
-                       size = 2),
-                 labels = paste0("T",0:2))
-
-## fitter function which returns a named vector
-ate_fit_fun <- function(d) {
-  ## estimate the Cox model
-  fit <- coxph(formula = Surv(time,event)~ X1+X2,data=d,y=TRUE,x=TRUE)
-
-  ## main fitter function; ignore output
-  invisible(capture.output(ate_fit <- summary(ate(fit,
-                                                  data = d,
-                                                  treatment = "X1",
-                                                  times = 5:8,
-                                                  se = FALSE))))
-  ## extract the point estimates for risk difference
-  res <- ate_fit$diffRisk$estimate
-  ## name the point estimates
-  names(res) <- paste0("ATE ",
-                       ate_fit$diffRisk$A,
-                       "-",
-                       ate_fit$diffRisk$B,
-                       " (t = ",
-                       ate_fit$diffRisk$time,")")
-  res
-}
-set.seed(102)
-cs4 <- cheap_bootstrap(ate_fit_fun,
-                       b = 5,
-                       data = dt)
-summary(cs4)
-
-## example from riskRegression with no existing coef function
-set.seed(18)
-learndat <- sampleData(200,outcome="binary")
-testdat <- sampleData(1200,outcome="binary")
-
-## score logistic regression models
-lr1 = glm(Y~X1+X2+X7+X9,data=learndat,family=binomial)
-lr2 = glm(Y~X3+X5,data=learndat,family=binomial)
-z<-Score(list("LR(X1+X2+X7+X9)"=lr1,
-         "LR(X3+X5)"=lr2),
-         formula=Y~1,
-         data=testdat,
-         metrics = "AUC")
-coef.Score <- function(x) {
-  res <- x$AUC$score$AUC
-  names(res) <- paste0("AUC (model = ", x$AUC$score$model, ")")
-  res
-}
-set.seed(102)
-cs5 <- cheap_bootstrap(z, b = 20)
-summary(cs5)
+cs <- cheap_bootstrap(fun = fun, 
+                      b = 20, 
+                      data = anorexia, 
+                      est_col_name = "estimate",
+                      par_col_names = "term", 
+                      parallelize = TRUE, 
+                      cores = 2)
 }
 }

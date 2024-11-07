@@ -16,12 +16,3 @@ as a function of the number of bootstrap samples.}
 \description{
 Plot method for cheap_bootstrap objects
 }
-\examples{
-utils::data(anorexia, package = "MASS")
-## example with a function call
-set.seed(123)
-x <- function(d) coef(lm(Postwt ~ Prewt + Treat + offset(Prewt), data = d))
-cs <- cheap_bootstrap(x, b = 10, data = anorexia)
-plot(cs)
-
-}
