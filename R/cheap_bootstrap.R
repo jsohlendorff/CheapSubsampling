@@ -89,7 +89,7 @@ cheap_bootstrap <- function(fun,
                             parallelize = FALSE,
                             cores = 1,
                             keep_estimates = TRUE) {
-  estimate <- b_est <- NULL
+  estimate <- b_est <- ..keep <- ..keep_names <- NULL
   ## Check if the data is a data.frame
   if (!inherits(data, "data.frame")) {
     stop("data must inherit data.frame")
@@ -118,7 +118,7 @@ cheap_bootstrap <- function(fun,
 
   if (is.null(size) && type == "subsampling") {
     size <- round(0.632 * n_dat)
-  } else {
+  } else if (type == "non_parametric") {
     size <- n_dat
   }
 
@@ -134,11 +134,12 @@ cheap_bootstrap <- function(fun,
       )
     }
   )
-  
   ## Check that est inherits data.frame
   if (!inherits(est, "data.frame")) {
     stop("function fun/derived from fun must return a data.frame")
   }
+  
+  est <- data.table::as.data.table(est)
   
   ## Check that est_col_name and par_col_names are in the names of columns of est
   if (!(est_col_name %in% colnames(est)) || 
@@ -152,10 +153,11 @@ cheap_bootstrap <- function(fun,
   }
   
   ## Check that the column specified by par_col_names is character or factor
-  if (!all(sapply(est[[par_col_names]], function(x) is.character(x) || is.factor(x)))) {
+  if (sum(est[, sapply(.SD, function(x) !is.character(x) && !is.factor(x)), .SDcols = par_col_names]) > 0) {
     stop("The column specified by par_col_names must be character or factor")
   }
-  est <- est[, c(par_col_names, est_col_name)]
+  keep_names <- c(par_col_names, est_col_name)
+  est <- est[, ..keep_names]
   
   boot_fun <- function(i) {
     set.seed(seeds[i])
@@ -191,19 +193,16 @@ cheap_bootstrap <- function(fun,
   } else {
     results <- lapply(seq_len(b), boot_fun)
   }
-  
-  
   tryCatch(
     {
-      boot_est <- do.call("rbind", results)[, c(par_col_names, est_col_name, "b")]
+      keep <- c(par_col_names, est_col_name, "b")
+      boot_est <- data.table::as.data.table(do.call("rbind", results))[, ..keep]
     },
     error = function(e) {
       stop("Could not bind the results. Did you return a vector of coefficients?")
     }
   )
   
-  boot_est <- data.table::as.data.table(boot_est)
-  est <- data.table::as.data.table(est)
   ## Rename the column by est_col_name to b_est
   ## and rename the column from est to estimate
   data.table::setnames(boot_est, est_col_name, "b_est")
