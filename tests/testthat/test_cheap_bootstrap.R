@@ -7,8 +7,8 @@ test_that("test cheap subsampling", {
     lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) %>%
       tidy()
   }
-  cs <- cheap_bootstrap(fun = fun, 
-                        b = 20, 
+  cs <- cheap_bootstrap(fun = fun,
+                        b = 20,
                         data = anorexia,
                         est_col_name = "estimate",
                         par_col_names = "term",
@@ -25,8 +25,8 @@ test_that("test cheap bootstrap", {
     lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) %>%
       tidy()
   }
-  cb <- cheap_bootstrap(fun = fun, 
-                        b = 20, 
+  cb <- cheap_bootstrap(fun = fun,
+                        b = 20,
                         data = anorexia,
                         est_col_name = "estimate",
                         par_col_names = "term",

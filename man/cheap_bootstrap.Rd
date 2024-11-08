@@ -19,7 +19,7 @@ cheap_bootstrap(
 )
 }
 \arguments{
-\item{fun}{A function that returns a data.frame with the point estimates given
+\item{fun}{A function that returns a data.frame
 in est_col_name and the corresponding parameter names in par_col_names.}
 
 \item{data}{Data set to be used for the computation.}
@@ -65,10 +65,10 @@ library(broom)
 library(dplyr)
 fun <- function(data) {
   lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) \%>\%
-  tidy() 
+  tidy()
 }
-cs <- cheap_bootstrap(fun = fun, 
-                      b = 20, 
+cs <- cheap_bootstrap(fun = fun,
+                      b = 20,
                       data = anorexia,
                       est_col_name = "estimate",
                       par_col_names = "term")
@@ -81,12 +81,12 @@ plot(cs)
 set.seed(123)
 ## note the function needs to load the packages needed
 ## for the computation if parallelized
-cs <- cheap_bootstrap(fun = fun, 
-                      b = 20, 
-                      data = anorexia, 
+cs <- cheap_bootstrap(fun = fun,
+                      b = 20,
+                      data = anorexia,
                       est_col_name = "estimate",
-                      par_col_names = "term", 
-                      parallelize = TRUE, 
+                      par_col_names = "term",
+                      parallelize = TRUE,
                       cores = 2)
 }
 }

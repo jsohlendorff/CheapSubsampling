@@ -4,10 +4,16 @@
 \alias{plot.cheap_bootstrap}
 \title{Plot method for cheap_bootstrap objects}
 \usage{
-\method{plot}{cheap_bootstrap}(x, ...)
+\method{plot}{cheap_bootstrap}(x, extra_conf_int = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class "cheap_bootstrap"}
+
+\item{extra_conf_int}{Numeric.
+Additional confidence interval to be added to the plot.
+Must be a data.frame consisting of the columns specified by par_col_names
+and two additional columns of type numeric.
+for each parameter.}
 
 \item{...}{Not applicable.
 Plots the point estimates and confidence intervals
