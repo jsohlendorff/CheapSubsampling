@@ -36,6 +36,6 @@ test_that("plot function with extra conf int", {
                   upper = estimate + 1.96 * std.error) %>%
     dplyr::select(term, lower, upper) %>%
     data.frame()
-  
+
   expect_no_error(plot(cs, extra_conf_int = conf_int))
 })

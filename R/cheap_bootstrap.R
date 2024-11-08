@@ -312,7 +312,7 @@ print.cheap_bootstrap <- function(x, ...) {
 ##' @param extra_conf_int Numeric.
 ##' Additional confidence interval to be added to the plot.
 ##' Must be a data.frame consisting of the columns specified by par_col_names
-##' and two additional columns of type numeric. 
+##' and two additional columns of type numeric.
 ##' for each parameter.
 ##' @param ... Not applicable.
 ##' Plots the point estimates and confidence intervals
@@ -326,10 +326,10 @@ plot.cheap_bootstrap <- function(x, extra_conf_int = NULL, ...) {
       stop("extra_conf_int must be a data.frame")
     }
     extra_conf_int <- data.table::as.data.table(extra_conf_int)
-    
+
     names_extra <- colnames(extra_conf_int)
     names_lower_upper <- setdiff(names_extra, x$par_col_names)
-    ## Check that x$par_col_names is in the names of extra_conf_int and that 
+    ## Check that x$par_col_names is in the names of extra_conf_int and that
     ## two additional columns are available and of numeric type
     if (!(all(x$par_col_names %in% names_extra)) ||
           !(all(sapply(extra_conf_int[, names_lower_upper, with = FALSE],
@@ -337,13 +337,13 @@ plot.cheap_bootstrap <- function(x, extra_conf_int = NULL, ...) {
       stop("extra_conf_int must contain the columns specified by par_col_names
            and two additional columns of type numeric")
     }
-    
+
     ## Merge extra_conf_int with x$res by par_col_names
     x$res <- merge(x$res, extra_conf_int, by = x$par_col_names, all.x = TRUE)
-    
+
     data.table::setnames(x$res, names_lower_upper, c("lower", "upper"))
   }
-  
+
   p <- ggplot2::ggplot(data = x$res,
                        ggplot2::aes(x = b, y = estimate)) +
     ggplot2::geom_line() +
