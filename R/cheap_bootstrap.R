@@ -375,10 +375,8 @@ plot.cheap_bootstrap <- function(x, extra_conf_int = NULL, ...) {
     ggplot2::ylab("")
   if (!is.null(extra_conf_int)) {
     p <- p +
-      ggplot2::geom_hline(aes(yintercept = lower,
-                              linetype = "dashed")) +
-      ggplot2::geom_hline(aes(yintercept = upper,
-                              linetype = "dashed"))
+      ggplot2::geom_hline(aes(yintercept = lower)) +
+      ggplot2::geom_hline(aes(yintercept = upper))
   }
   p
 }
