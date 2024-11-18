@@ -8,7 +8,7 @@ get_conf_int <- function(est,
   b_max <- length(est_boot)
   res <- list()
   for (b in seq_len(b_max)){
-    b_est <- est_boot[seq_len(b_max)]
+    b_est <- est_boot[seq_len(b)]
     if (type == "subsampling") {
       sub_factor <- sqrt((size) / (n_dat - size))
     } else {
@@ -134,10 +134,8 @@ cheap_bootstrap <- function(fun,
     },
     error = function(e) {
       stop(
-        "function fun/derived from fun failed with error: ",
-        conditionMessage(e),
-        ".\n Did you specify fun as a function or 
-        as a model object with a corresponding call and coef function?"
+        "function fun failed with error on the original dataset: ",
+        conditionMessage(e)
       )
     }
   )
@@ -205,7 +203,7 @@ cheap_bootstrap <- function(fun,
     },
     error = function(e) {
       stop("Could not bind the results.
-            Did you return a vector of coefficients?")
+            Did you return a data.frame in the function fun?")
     }
   )
 
@@ -237,7 +235,7 @@ cheap_bootstrap <- function(fun,
       stop(
         "Computation of confidence intervals failed with error: ",
         conditionMessage(e),
-        ". Does your function return a vector of coefficients?"
+        ". Does your function return a data.frame?"
       )
     }
   )

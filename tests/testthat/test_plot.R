@@ -1,8 +1,6 @@
-test_that("plot function", {
+test_that("plot function, with extra_conf_int, null extra_conf_int", {
   utils::data(anorexia, package = "MASS")
-  ## example with a function call
   set.seed(123)
-  library(broom)
   fun <- function(data) {
     lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) %>%
       tidy()
@@ -13,22 +11,6 @@ test_that("plot function", {
                         est_col_name = "estimate",
                         par_col_names = "term")
   expect_no_error(plot(cs))
-})
-
-test_that("plot function with extra conf int", {
-  utils::data(anorexia, package = "MASS")
-  ## example with a function call
-  set.seed(123)
-  library(broom)
-  fun <- function(data) {
-    lm(formula = Postwt ~ Prewt + Treat + offset(Prewt), data = data) %>%
-      tidy()
-  }
-  cs <- cheap_bootstrap(fun = fun,
-                        b = 20,
-                        data = anorexia,
-                        est_col_name = "estimate",
-                        par_col_names = "term")
   conf_int <- lm(formula = Postwt ~ Prewt + Treat + offset(Prewt),
                  data = anorexia) %>%
     tidy() %>%
@@ -36,6 +18,10 @@ test_that("plot function with extra conf int", {
                   upper = estimate + 1.96 * std.error) %>%
     dplyr::select(term, lower, upper) %>%
     data.frame()
-
+  ## example additional confidence interval
   expect_no_error(plot(cs, extra_conf_int = conf_int))
+  
+  ## examples with additional confidence interval incorrectly specified
+  expect_error(plot(cs, extra_conf_int = list()))
+  expect_error(plot(cs, extra_conf_int = data.frame(x=3)))
 })
