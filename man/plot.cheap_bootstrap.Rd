@@ -4,14 +4,14 @@
 \alias{plot.cheap_bootstrap}
 \title{Plot method for cheap_bootstrap objects}
 \usage{
-\method{plot}{cheap_bootstrap}(x, extra_conf_int = NULL, ...)
+\method{plot}{cheap_bootstrap}(x, alternate_confidence_interval = NULL, ...)
 }
 \arguments{
 \item{x}{An object of class "cheap_bootstrap"}
 
-\item{extra_conf_int}{Numeric.
+\item{alternate_confidence_interval}{Numeric.
 Additional confidence interval to be added to the plot.
-Must be a data.frame consisting of the columns specified by par_col_names
+Must be a data.frame consisting of the columns specified by parameter_column_names
 and two additional columns of type numeric.
 for each parameter.}
 

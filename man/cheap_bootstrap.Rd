@@ -10,8 +10,8 @@ cheap_bootstrap(
   size = NULL,
   type = "subsampling",
   b = 20,
-  est_col_name = "estimate",
-  par_col_names = "parameter",
+  estimate_column_name = "estimate",
+  parameter_column_names = "parameter",
   alpha = 0.05,
   parallelize = FALSE,
   cores = 1,
@@ -20,7 +20,7 @@ cheap_bootstrap(
 }
 \arguments{
 \item{fun}{A function that returns a data.frame
-in est_col_name and the corresponding parameter names in par_col_names.}
+in estimate_column_name and the corresponding parameter names in parameter_column_names.}
 
 \item{data}{Data set to be used for the computation.}
 
@@ -32,9 +32,9 @@ Defaults to "subsampling".}
 
 \item{b}{Number of bootstrap samples.}
 
-\item{est_col_name}{Character. Column name of the point estimates.}
+\item{estimate_column_name}{Character. Column name of the point estimates.}
 
-\item{par_col_names}{Character. Column names of the parameter names.}
+\item{parameter_column_names}{Character. Column names of the parameters.}
 
 \item{alpha}{Significance level. Defaults to 0.05.}
 
@@ -70,8 +70,8 @@ fun <- function(data) {
 cs <- cheap_bootstrap(fun = fun,
                       b = 20,
                       data = anorexia,
-                      est_col_name = "estimate",
-                      par_col_names = "term")
+                      estimate_column_name = "estimate",
+                      parameter_column_names = "term")
 cs
 summary(cs)
 plot(cs)
@@ -84,8 +84,8 @@ set.seed(123)
 cs <- cheap_bootstrap(fun = fun,
                       b = 20,
                       data = anorexia,
-                      est_col_name = "estimate",
-                      par_col_names = "term",
+                      estimate_column_name = "estimate",
+                      parameter_column_names = "term",
                       parallelize = TRUE,
                       cores = 2)
 }
